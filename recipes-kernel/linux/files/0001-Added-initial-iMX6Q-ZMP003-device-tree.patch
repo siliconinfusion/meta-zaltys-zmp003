@@ -1,22 +1,9 @@
-From b8a956be9e1c80c66d0dec8c01ee8005ec15e5c9 Mon Sep 17 00:00:00 2001
-From: Chris Holgate <chris@zynaptic.com>
-Date: Wed, 7 Oct 2015 12:05:11 +0100
-Subject: [PATCH] Added initial iMX6Q ZMP003 device tree
-
-Signed-off-by: Chris Holgate <chris@zynaptic.com>
----
- arch/arm/boot/dts/imx6q-zmp003.dts  |  43 +++
- arch/arm/boot/dts/imx6q-zmp003.dtsi | 637 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 680 insertions(+)
- create mode 100644 arch/arm/boot/dts/imx6q-zmp003.dts
- create mode 100644 arch/arm/boot/dts/imx6q-zmp003.dtsi
-
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dts b/arch/arm/boot/dts/imx6q-zmp003.dts
 new file mode 100644
-index 0000000..1a410dd
+index 0000000..f665222
 --- /dev/null
 +++ b/arch/arm/boot/dts/imx6q-zmp003.dts
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,54 @@
 +/*
 + * Copyright 2015 Silicon Infusion Ltd.
 + *
@@ -43,6 +30,8 @@ index 0000000..1a410dd
 +	compatible = "fsl,imx6q-zmp003", "fsl,imx6q";
 +};
 +
++
++/*
 +&hdmi_core {
 +	status = "okay";
 +};
@@ -58,7 +47,16 @@ index 0000000..1a410dd
 +&mxcfb2 {
 +	status = "okay";
 +};
++*/
 +
++
++&mxcfb3 {
++        status = "okay";
++};
++
++&lcd {
++        status = "okay";
++};
 +
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dtsi b/arch/arm/boot/dts/imx6q-zmp003.dtsi
 new file mode 100644
@@ -703,6 +701,3 @@ index 0000000..2a12367
 +&wdog2 {
 +	status = "disabled";
 +};
--- 
-1.9.1
-
