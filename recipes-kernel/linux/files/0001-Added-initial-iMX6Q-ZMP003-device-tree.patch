@@ -31,7 +31,7 @@ index 0000000..f665222
 +};
 +
 +
-+/*
++/* HDMI */
 +&hdmi_core {
 +	status = "okay";
 +};
@@ -47,9 +47,9 @@ index 0000000..f665222
 +&mxcfb2 {
 +	status = "okay";
 +};
-+*/
 +
 +
++/* LCD */
 +&mxcfb3 {
 +        status = "okay";
 +};
