@@ -1,9 +1,9 @@
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dts b/arch/arm/boot/dts/imx6q-zmp003.dts
 new file mode 100644
-index 0000000..f665222
+index 0000000..29fe34e
 --- /dev/null
 +++ b/arch/arm/boot/dts/imx6q-zmp003.dts
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,56 @@
 +/*
 + * Copyright 2015 Silicon Infusion Ltd.
 + *
@@ -49,7 +49,9 @@ index 0000000..f665222
 +};
 +
 +
++
 +/* LCD */
++/*
 +&mxcfb3 {
 +        status = "okay";
 +};
@@ -57,10 +59,10 @@ index 0000000..f665222
 +&lcd {
 +        status = "okay";
 +};
-+
++*/
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dtsi b/arch/arm/boot/dts/imx6q-zmp003.dtsi
 new file mode 100644
-index 0000000..2a12367
+index 0000000..bf64fee
 --- /dev/null
 +++ b/arch/arm/boot/dts/imx6q-zmp003.dtsi
 @@ -0,0 +1,637 @@
@@ -144,7 +146,7 @@ index 0000000..2a12367
 +		compatible = "fsl,mxc_sdc_fb";
 +		disp_dev = "hdmi";
 +		interface_pix_fmt = "RGB24";
-+		mode_str ="1280x720M@60";
++		mode_str ="1920x1080M@60";
 +		default_bpp = <24>;
 +		int_clk = <0>;
 +		late_init = <0>;
