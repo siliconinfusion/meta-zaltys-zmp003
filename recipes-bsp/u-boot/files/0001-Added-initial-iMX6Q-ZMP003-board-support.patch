@@ -16,10 +16,10 @@ index 0000000..de2890b
 +
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.c b/board/freescale/mx6qzmp003/mx6qzmp003.c
 new file mode 100644
-index 0000000..8433fdc
+index 0000000..23a1210
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.c
-@@ -0,0 +1,1032 @@
+@@ -0,0 +1,1044 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -201,6 +201,12 @@ index 0000000..8433fdc
 +        MX6_PAD_EIM_D24__GPIO3_IO24 | MUX_PAD_CTRL(NO_PAD_CTRL),  /* OUT2 */
 +};
 +
++static iomux_v3_cfg_t const clc_cpu_sys_pads[] = {
++        /* Temporarily set them up as GPIO for board testing purposes */
++        MX6_PAD_NANDF_CLE__GPIO6_IO07  | MUX_PAD_CTRL(NO_PAD_CTRL), /* int0 */
++        MX6_PAD_NANDF_WP_B__GPIO6_IO09 | MUX_PAD_CTRL(NO_PAD_CTRL), /* int1 */
++};
++
 +static void setup_pcie(void)
 +{
 +	imx_iomux_v3_setup_multiple_pads(pcie_pads, ARRAY_SIZE(pcie_pads));
@@ -244,6 +250,11 @@ index 0000000..8433fdc
 +        imx_iomux_v3_setup_multiple_pads(onboard_gps_pads, ARRAY_SIZE(onboard_gps_pads));	
 +	gpio_direction_output(GPIO_GPS_RSTn,  1);
 +	gpio_direction_output(GPIO_GPS_ONOFF, 0);
++}
++
++static void setup_iomux_clc(void)
++{
++        imx_iomux_v3_setup_multiple_pads(clc_cpu_sys_pads, ARRAY_SIZE(clc_cpu_sys_pads));	
 +}
 +
 +#ifdef CONFIG_SYS_I2C_MXC
@@ -885,6 +896,7 @@ index 0000000..8433fdc
 +	setup_iomux_uart();
 +	setup_iomux_fpga();
 +        setup_iomux_gps();
++        setup_iomux_clc();
 +	
 +#if defined(CONFIG_VIDEO_IPUV3)
 +	setup_display();
