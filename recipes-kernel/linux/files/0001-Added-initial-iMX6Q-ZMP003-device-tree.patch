@@ -1,9 +1,9 @@
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dts b/arch/arm/boot/dts/imx6q-zmp003.dts
 new file mode 100644
-index 0000000..29fe34e
+index 0000000..67a9a63
 --- /dev/null
 +++ b/arch/arm/boot/dts/imx6q-zmp003.dts
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,60 @@
 +/*
 + * Copyright 2015 Silicon Infusion Ltd.
 + *
@@ -37,6 +37,10 @@ index 0000000..29fe34e
 +};
 +
 +&hdmi_video {
++	status = "okay";
++};
++
++&hdmi_audio {
 +	status = "okay";
 +};
 +
