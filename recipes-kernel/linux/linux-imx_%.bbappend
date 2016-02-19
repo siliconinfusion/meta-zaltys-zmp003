@@ -9,6 +9,27 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 # to a specific kernel release number.
 SRC_URI += "file://0001-Added-initial-iMX6Q-ZMP003-device-tree.patch"
 
-# Enable user mode SPI operation for all ZMP003 boards.
-SRC_URI += "file://spi_spidev.cfg"
+# Append our own kernel configuration options manually to the defconfig file.
+#
+# Doing this horrible hack because the Freescale Yocto recipes seem not to
+# support the standard Yocto mechanism of using kernel config fragments.
+#
+do_compile_prepend() {
+  echo ""                                      >>${S}/../defconfig
+  echo "# Silicon Infusion Zaltys ZMP003-CPU1" >>${S}/../defconfig
+  echo "CONFIG_SPI_SPIDEV=y"                   >>${S}/../defconfig
+  echo "CONFIG_RTL8192CU=m"                    >>${S}/../defconfig
+  echo "CONFIG_RTLWIFI=m"                      >>${S}/../defconfig
+  echo "CONFIG_RTLWIFI_USB=m"                  >>${S}/../defconfig
+  echo "CONFIG_RTLWIFI_DEBUG=n"                >>${S}/../defconfig
+  echo "CONFIG_RTL8192C_COMMON=m"              >>${S}/../defconfig
 
+  echo ""                                      >>${S}/.config
+  echo "# Silicon Infusion Zaltys ZMP003-CPU1" >>${S}/.config
+  echo "CONFIG_SPI_SPIDEV=y"                   >>${S}/.config
+  echo "CONFIG_RTL8192CU=m"                    >>${S}/.config
+  echo "CONFIG_RTLWIFI=m"                      >>${S}/.config
+  echo "CONFIG_RTLWIFI_USB=m"                  >>${S}/.config
+  echo "CONFIG_RTLWIFI_DEBUG=n"                >>${S}/.config
+  echo "CONFIG_RTL8192C_COMMON=m"              >>${S}/.config
+}
