@@ -23,6 +23,9 @@ do_compile_prepend() {
   echo "CONFIG_RTLWIFI_USB=m"                  >>${S}/../defconfig
   echo "CONFIG_RTLWIFI_DEBUG=n"                >>${S}/../defconfig
   echo "CONFIG_RTL8192C_COMMON=m"              >>${S}/../defconfig
+  echo "CONFIG_WEXT_CORE=y"                    >>${S}/../defconfig
+  echo "CONFIG_WEXT_PROC=y"                    >>${S}/../defconfig
+  echo "CONFIG_CFG80211_WEXT=y"                >>${S}/../defconfig
 
   echo ""                                      >>${S}/.config
   echo "# Silicon Infusion Zaltys ZMP003-CPU1" >>${S}/.config
@@ -32,4 +35,7 @@ do_compile_prepend() {
   echo "CONFIG_RTLWIFI_USB=m"                  >>${S}/.config
   echo "CONFIG_RTLWIFI_DEBUG=n"                >>${S}/.config
   echo "CONFIG_RTL8192C_COMMON=m"              >>${S}/.config
+  echo "CONFIG_WEXT_CORE=y"                    >>${S}/.config
+  echo "CONFIG_WEXT_PROC=y"                    >>${S}/.config
+  echo "CONFIG_CFG80211_WEXT=y"                >>${S}/.config
 }
