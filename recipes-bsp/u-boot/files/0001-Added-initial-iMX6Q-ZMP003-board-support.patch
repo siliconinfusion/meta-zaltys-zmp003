@@ -16,7 +16,7 @@ index 0000000..de2890b
 +
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.c b/board/freescale/mx6qzmp003/mx6qzmp003.c
 new file mode 100644
-index 0000000..99058cb
+index 0000000..4df29f4
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.c
 @@ -0,0 +1,1056 @@
@@ -263,9 +263,9 @@ index 0000000..99058cb
 +        int reg;
 +
 +        /* Do not assert PMIC_STBY_REQ pin in iMX STOP mode */
-+        reg = readl(&mxc_ccm->CLPCR);
++        reg = readl(&mxc_ccm->clpcr);
 +        reg &= ~MXC_CCM_CLPCR_VSTBY;
-+        writel(reg, &mxc_ccm->CLPCR);
++        writel(reg, &mxc_ccm->clpcr);
 +}
 +
 +#ifdef CONFIG_SYS_I2C_MXC
