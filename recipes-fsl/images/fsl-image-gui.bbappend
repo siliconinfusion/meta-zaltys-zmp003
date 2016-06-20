@@ -17,4 +17,4 @@ IMAGE_INSTALL += " python3-ctypes "
 IMAGE_INSTALL += " python3-cherrypy "
 IMAGE_INSTALL += " python3-simplejson "
 IMAGE_INSTALL += " python3-requests "
-
+IMAGE_INSTALL += " packagegroup-xfce-base "
