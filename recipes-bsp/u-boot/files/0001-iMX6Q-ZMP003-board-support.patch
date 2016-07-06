@@ -1,3 +1,46 @@
+diff --git a/arch/arm/cpu/armv7/mx6/Kconfig b/arch/arm/cpu/armv7/mx6/Kconfig
+index 1bcd399..3586a87 100644
+--- a/arch/arm/cpu/armv7/mx6/Kconfig
++++ b/arch/arm/cpu/armv7/mx6/Kconfig
+@@ -92,6 +92,12 @@ config TARGET_MX6QSABREAUTO
+ 	select DM
+ 	select DM_THERMAL
+ 
++config TARGET_MX6QZMP003
++	bool "mx6qzmp003"
++	select SUPPORT_SPL
++	select DM
++	select DM_THERMAL
++
+ config TARGET_MX6SABRESD
+ 	bool "mx6sabresd"
+ 	select SUPPORT_SPL
+@@ -191,6 +197,7 @@ source "board/congatec/cgtqmx6eval/Kconfig"
+ source "board/embest/mx6boards/Kconfig"
+ source "board/freescale/mx6qarm2/Kconfig"
+ source "board/freescale/mx6qsabreauto/Kconfig"
++source "board/freescale/mx6qzmp003/Kconfig"
+ source "board/freescale/mx6sabresd/Kconfig"
+ source "board/freescale/mx6slevk/Kconfig"
+ source "board/freescale/mx6sxsabresd/Kconfig"
+diff --git a/board/freescale/mx6qzmp003/Kconfig b/board/freescale/mx6qzmp003/Kconfig
+new file mode 100644
+index 0000000..86b4db3
+--- /dev/null
++++ b/board/freescale/mx6qzmp003/Kconfig
+@@ -0,0 +1,12 @@
++if TARGET_MX6QZMP003
++
++config SYS_BOARD
++	default "mx6qzmp003"
++
++config SYS_VENDOR
++	default "freescale"
++
++config SYS_CONFIG_NAME
++	default "mx6qzmp003"
++
++endif
 diff --git a/board/freescale/mx6qzmp003/Makefile b/board/freescale/mx6qzmp003/Makefile
 new file mode 100644
 index 0000000..de2890b
@@ -16,10 +59,10 @@ index 0000000..de2890b
 +
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.c b/board/freescale/mx6qzmp003/mx6qzmp003.c
 new file mode 100644
-index 0000000..4df29f4
+index 0000000..144d1e3
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.c
-@@ -0,0 +1,1056 @@
+@@ -0,0 +1,983 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -37,6 +80,7 @@ index 0000000..4df29f4
 +#include <asm/gpio.h>
 +#include <asm/imx-common/iomux-v3.h>
 +#include <asm/imx-common/boot_mode.h>
++#include <asm/imx-common/video.h>
 +#include <mmc.h>
 +#include <fsl_esdhc.h>
 +#include <miiphy.h>
@@ -81,17 +125,16 @@ index 0000000..4df29f4
 +	PAD_CTL_ODE | PAD_CTL_SRE_FAST)
 +
 +#ifdef CONFIG_SYS_I2C_MXC
-+#define I2C_PAD MUX_PAD_CTRL(I2C_PAD_CTRL)
 +/* I2C2 Camera, MIPI, pfuze */
 +struct i2c_pads_info i2c_pad_info1 = {
 +	.scl = {
-+		.i2c_mode = MX6_PAD_EIM_EB2__I2C2_SCL | I2C_PAD,
-+		.gpio_mode = MX6_PAD_EIM_EB2__GPIO2_IO30 | I2C_PAD,
++		.i2c_mode = MX6_PAD_EIM_EB2__I2C2_SCL    | MUX_PAD_CTRL(I2C_PAD_CTRL),
++		.gpio_mode = MX6_PAD_EIM_EB2__GPIO2_IO30 | MUX_PAD_CTRL(I2C_PAD_CTRL),
 +		.gp = IMX_GPIO_NR(2, 30)
 +	},
 +	.sda = {
-+		.i2c_mode = MX6_PAD_EIM_D16__I2C2_SDA | I2C_PAD,
-+		.gpio_mode = MX6_PAD_EIM_D16__GPIO3_IO16 | I2C_PAD,
++		.i2c_mode = MX6_PAD_EIM_D16__I2C2_SDA    | MUX_PAD_CTRL(I2C_PAD_CTRL),
++		.gpio_mode = MX6_PAD_EIM_D16__GPIO3_IO16 | MUX_PAD_CTRL(I2C_PAD_CTRL),
 +		.gp = IMX_GPIO_NR(3, 16)
 +	}
 +};
@@ -640,22 +683,13 @@ index 0000000..4df29f4
 +}
 +
 +#if defined(CONFIG_VIDEO_IPUV3)
-+struct display_info_t {
-+	int	bus;
-+	int	addr;
-+	int	pixfmt;
-+	int	(*detect)(struct display_info_t const *dev);
-+	void	(*enable)(struct display_info_t const *dev);
-+	struct	fb_videomode mode;
-+};
-+
 +iomux_v3_cfg_t const video_io_pads[] = {
 +	MX6_PAD_DI0_DISP_CLK__IPU1_DI0_DISP_CLK | MUX_PAD_CTRL(NO_PAD_CTRL), /* DISP0_CLK */
 +	MX6_PAD_DI0_PIN15__IPU1_DI0_PIN15 | MUX_PAD_CTRL(NO_PAD_CTRL),       /* DISP0_DRDY */
 +	MX6_PAD_DI0_PIN2__IPU1_DI0_PIN02 | MUX_PAD_CTRL(NO_PAD_CTRL),        /* DISP0_HSYNC */
 +	MX6_PAD_DI0_PIN3__IPU1_DI0_PIN03 | MUX_PAD_CTRL(NO_PAD_CTRL),        /* DISP0_VSYNC */
-+	MX6_PAD_KEY_COL3__HDMI_TX_DDC_SCL | MUX_PAD_CTRL(I2C_PAD),           /* HDMI I2C SCL */
-+	MX6_PAD_KEY_ROW3__HDMI_TX_DDC_SDA | MUX_PAD_CTRL(I2C_PAD),           /* HDMI I2C SDA */
++	MX6_PAD_KEY_COL3__HDMI_TX_DDC_SCL | MUX_PAD_CTRL(I2C_PAD_CTRL),      /* HDMI I2C SCL */
++	MX6_PAD_KEY_ROW3__HDMI_TX_DDC_SDA | MUX_PAD_CTRL(I2C_PAD_CTRL),      /* HDMI I2C SDA */
 +	MX6_PAD_EIM_A25__HDMI_TX_CEC_LINE | MUX_PAD_CTRL(NO_PAD_CTRL),       /* HDMI CEC */
 +};
 +
@@ -717,15 +751,8 @@ index 0000000..4df29f4
 +	imx_enable_hdmi_phy();
 +}
 +
-+int detect_hdmi(struct display_info_t const *dev)
-+{
-+	struct hdmi_regs *hdmi	= (struct hdmi_regs *)HDMI_ARB_BASE_ADDR;
-+	printf ("HDMI PHY STAT 0 => 0x%08X\n", readb(&hdmi->phy_stat0)); 
-+	return readb(&hdmi->phy_stat0) & HDMI_DVI_STAT;
-+}
-+
-+static struct display_info_t const displays[] = {
-+{
++struct display_info_t const displays[] = {
++  {
 +	.bus	= 0,
 +	.addr	= 0,
 +	.pixfmt	= IPU_PIX_FMT_RGB24,
@@ -744,23 +771,9 @@ index 0000000..4df29f4
 +		.hsync_len      = 48,
 +		.vsync_len      = 3,
 +		.sync           = 0,
-+		.vmode          = FB_VMODE_NONINTERLACED 
-+/*	.mode	= {
-+		.name           = "LCD-WVGA",
-+		.refresh        = 60,
-+		.xres           = 800,
-+		.yres           = 480,
-+		.pixclock       = 29850,
-+		.left_margin    = 89,
-+		.right_margin   = 164,
-+		.upper_margin   = 23,
-+		.lower_margin   = 10,
-+		.hsync_len      = 10,
-+		.vsync_len      = 10,
-+		.sync           = 0,
-+		.vmode          = FB_VMODE_NONINTERLACED */
-+} }, 
-+{
++		.vmode          = FB_VMODE_NONINTERLACED }
++  }, 
++  {
 +	.bus	= -1,
 +	.addr	= 0,
 +	.pixfmt	= IPU_PIX_FMT_RGB24,
@@ -779,55 +792,10 @@ index 0000000..4df29f4
 +		.hsync_len      = 60,
 +		.vsync_len      = 10,
 +		.sync           = 0,
-+		.vmode          = FB_VMODE_NONINTERLACED
-+} }, 
++		.vmode          = FB_VMODE_NONINTERLACED }
++  },
 +};
-+
-+int board_video_skip(void)
-+{
-+	int i;
-+	int ret;
-+	char const *panel = getenv("panel");
-+	if (!panel) {
-+		for (i = 0; i < ARRAY_SIZE(displays); i++) {
-+			struct display_info_t const *dev = displays+i;
-+			if (dev->detect && dev->detect(dev)) {
-+				panel = dev->mode.name;
-+				printf("auto-detected panel %s\n", panel);
-+				break;
-+			}
-+		}
-+		if (!panel) {
-+			panel = displays[0].mode.name;
-+			printf("No panel detected: default to %s\n", panel);
-+			i = 0;
-+		}
-+	} else {
-+		for (i = 0; i < ARRAY_SIZE(displays); i++) {
-+			if (!strcmp(panel, displays[i].mode.name))
-+				break;
-+		}
-+	}
-+	if (i < ARRAY_SIZE(displays)) {
-+		ret = ipuv3_fb_init(&displays[i].mode, 0,
-+				    displays[i].pixfmt);
-+		if (!ret) {
-+			if (displays[i].enable)
-+				displays[i].enable(displays+i);
-+			printf("Display: %s (%ux%u)\n",
-+			       displays[i].mode.name,
-+			       displays[i].mode.xres,
-+			       displays[i].mode.yres);
-+		} else
-+			printf("LCD %s cannot be configured: %d\n",
-+			       displays[i].mode.name, ret);
-+	} else {
-+		printf("unsupported panel %s\n", panel);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
++size_t display_count = ARRAY_SIZE(displays);
 +
 +static void setup_display(void)
 +{
@@ -902,80 +870,6 @@ index 0000000..4df29f4
 +	return cpu_eth_init(bis);
 +}
 +
-+int board_early_init_f(void)
-+{
-+	setup_iomux_uart();
-+	setup_iomux_fpga();
-+        setup_iomux_gps();
-+        setup_iomux_clc();
-+	
-+        setup_standby_mode();
-+
-+#if defined(CONFIG_VIDEO_IPUV3)
-+	setup_display();
-+#endif
-+
-+#ifdef CONFIG_SYS_USE_SPINOR
-+	setup_spinor();
-+#endif
-+
-+#ifdef CONFIG_CMD_SATA
-+	setup_sata();
-+#endif
-+	return 0;
-+}
-+
-+int board_init(void)
-+{
-+	/* address of boot parameters */
-+	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
-+
-+#if defined(CONFIG_MX6DL) && defined(CONFIG_MXC_EPDC)
-+	setup_epdc();
-+#endif
-+
-+	return 0;
-+}
-+
-+#ifdef CONFIG_CMD_BMODE
-+static const struct boot_mode board_boot_modes[] = {
-+	/* 4 bit bus width */
-+	{"sd3",	 MAKE_CFGVAL(0x40, 0x30, 0x00, 0x00)},
-+	/* 8 bit bus width */
-+	{"emmc", MAKE_CFGVAL(0x60, 0x58, 0x00, 0x00)},
-+	{NULL,	 0},
-+};
-+#endif
-+
-+int board_late_init(void)
-+{
-+	int ret = 0;
-+#ifdef CONFIG_CMD_BMODE
-+	add_board_boot_modes(board_boot_modes);
-+#endif
-+
-+#ifdef CONFIG_SYS_I2C_MXC
-+	setup_i2c(1, CONFIG_SYS_I2C_SPEED,
-+			0x7f, &i2c_pad_info1);
-+	ret = setup_pmic_voltages();
-+	if (ret)
-+		return -1;
-+#endif
-+
-+#ifdef CONFIG_ENV_IS_IN_MMC
-+	board_late_mmc_env_init();
-+#endif
-+
-+	setup_program_fpga();
-+	return 0;
-+}
-+
-+int checkboard(void)
-+{
-+	puts("Board: Zaltys ZMP003\n");
-+	return 0;
-+}
-+
 +#ifdef CONFIG_FASTBOOT
 +
 +void board_fastboot_setup(void)
@@ -1013,48 +907,46 @@ index 0000000..4df29f4
 +
 +#endif /*CONFIG_FASTBOOT*/
 +
-+#ifdef CONFIG_IMX_UDC
-+iomux_v3_cfg_t const otg_udc_pads[] = {
-+	(MX6_PAD_ENET_RX_ER__USB_OTG_ID | MUX_PAD_CTRL(NO_PAD_CTRL)),
-+};
-+void udc_pins_setting(void)
-+{
-+	imx_iomux_v3_setup_multiple_pads(otg_udc_pads,
-+			ARRAY_SIZE(otg_udc_pads));
-+
-+	/*set daisy chain for otg_pin_id on 6q. for 6dl, this bit is reserved*/
-+    mxc_iomux_set_gpr_register(1, 13, 1, 0);
-+}
-+#endif /*CONFIG_IMX_UDC*/
-+
 +#ifdef CONFIG_USB_EHCI_MX6
-+iomux_v3_cfg_t const usb_otg_pads[] = {
++#define USB_OTHERREGS_OFFSET	0x800
++#define UCTRL_PWR_POL		(1 << 9)
++
++static iomux_v3_cfg_t const usb_otg_pads[] = {
 +	MX6_PAD_EIM_D22__USB_OTG_PWR | MUX_PAD_CTRL(NO_PAD_CTRL),
 +	MX6_PAD_ENET_RX_ER__USB_OTG_ID | MUX_PAD_CTRL(NO_PAD_CTRL),
 +};
 +
-+iomux_v3_cfg_t const usb_hc1_pads[] = {
++static iomux_v3_cfg_t const usb_hc1_pads[] = {
 +	MX6_PAD_ENET_TXD1__GPIO1_IO29 | MUX_PAD_CTRL(NO_PAD_CTRL),
 +};
 +
++static void setup_usb(void)
++{
++	imx_iomux_v3_setup_multiple_pads(usb_otg_pads,
++					 ARRAY_SIZE(usb_otg_pads));
++
++	/*
++	 * set daisy chain for otg_pin_id on 6q.
++	 * for 6dl, this bit is reserved
++	 */
++	imx_iomux_set_gpr_register(1, 13, 1, 0);
++
++	imx_iomux_v3_setup_multiple_pads(usb_hc1_pads,
++					 ARRAY_SIZE(usb_hc1_pads));
++}
++
 +int board_ehci_hcd_init(int port)
 +{
-+	switch (port) {
-+	case 0:
-+		imx_iomux_v3_setup_multiple_pads(usb_otg_pads,
-+			ARRAY_SIZE(usb_otg_pads));
++	u32 *usbnc_usb_ctrl;
 +
-+		/*set daisy chain for otg_pin_id on 6q. for 6dl, this bit is reserved*/
-+		mxc_iomux_set_gpr_register(1, 13, 1, 0);
-+		break;
-+	case 1:
-+		imx_iomux_v3_setup_multiple_pads(usb_hc1_pads,
-+			ARRAY_SIZE(usb_hc1_pads));
-+		break;
-+	default:
-+		printf("MXC USB port %d not yet supported\n", port);
-+		return 1;
-+	}
++	if (port > 1)
++		return -EINVAL;
++
++	usbnc_usb_ctrl = (u32 *)(USB_BASE_ADDR + USB_OTHERREGS_OFFSET +
++				 port * 4);
++
++	setbits_le32(usbnc_usb_ctrl, UCTRL_PWR_POL);
++
 +	return 0;
 +}
 +
@@ -1071,11 +963,89 @@ index 0000000..4df29f4
 +		break;
 +	default:
 +		printf("MXC USB port %d not yet supported\n", port);
-+		return 1;
++		return -EINVAL;
 +	}
++
 +	return 0;
 +}
 +#endif
++
++int board_early_init_f(void)
++{
++	setup_iomux_uart();
++	setup_iomux_fpga();
++        setup_iomux_gps();
++        setup_iomux_clc();
++	
++        setup_standby_mode();
++
++#if defined(CONFIG_VIDEO_IPUV3)
++	setup_display();
++#endif
++
++#ifdef CONFIG_SYS_USE_SPINOR
++	setup_spinor();
++#endif
++
++#ifdef CONFIG_CMD_SATA
++	setup_sata();
++#endif
++	return 0;
++}
++
++int board_init(void)
++{
++	/* address of boot parameters */
++	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
++
++#if defined(CONFIG_MX6DL) && defined(CONFIG_MXC_EPDC)
++	setup_epdc();
++#endif
++
++#ifdef CONFIG_USB_EHCI_MX6
++	setup_usb();
++#endif
++	return 0;
++}
++
++#ifdef CONFIG_CMD_BMODE
++static const struct boot_mode board_boot_modes[] = {
++	/* 4 bit bus width */
++	{"sd3",	 MAKE_CFGVAL(0x40, 0x30, 0x00, 0x00)},
++	/* 8 bit bus width */
++	{"emmc", MAKE_CFGVAL(0x60, 0x58, 0x00, 0x00)},
++	{NULL,	 0},
++};
++#endif
++
++int board_late_init(void)
++{
++	int ret = 0;
++#ifdef CONFIG_CMD_BMODE
++	add_board_boot_modes(board_boot_modes);
++#endif
++
++#ifdef CONFIG_SYS_I2C_MXC
++	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
++	ret = setup_pmic_voltages();
++	if (ret)
++		return -1;
++#endif
++
++#ifdef CONFIG_ENV_IS_IN_MMC
++	board_late_mmc_env_init();
++#endif
++
++	setup_program_fpga();
++	return 0;
++}
++
++int checkboard(void)
++{
++	puts("Board: Zaltys ZMP003\n");
++	return 0;
++}
++
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.cfg b/board/freescale/mx6qzmp003/mx6qzmp003.cfg
 new file mode 100644
 index 0000000..aa897e9
@@ -1240,23 +1210,25 @@ index 0000000..aa897e9
 + */
 +DATA 4, 0x020c4060, 0x000000fb
 +#endif
-diff --git a/boards.cfg b/boards.cfg
-index 353003c..39f4483 100644
---- a/boards.cfg
-+++ b/boards.cfg
-@@ -1309,3 +1309,6 @@ Orphan  powerpc     mpc8xx         -           -               genietv
- Orphan  powerpc     mpc8xx         -           -               mbx8xx              MBX                                  -                                                                                                                                 -
- Orphan  powerpc     mpc8xx         -           -               mbx8xx              MBX860T                              -                                                                                                                                 -
- Orphan  powerpc     mpc8xx         -           -               nx823               NX823                                -                                                                                                                                 -
-+# The following are under development.
-+Active  arm         armv7          mx6         freescale       mx6qzmp003          mx6qzmp003                           mx6qzmp003:IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,DEFAULT_FDT_FILE="imx6q-zmp003.dtb",DDR_MB=1024                 Chris Holgate <chris@zynaptic.com>
-+
+diff --git a/configs/mx6qzmp003_defconfig b/configs/mx6qzmp003_defconfig
+new file mode 100644
+index 0000000..a1a49d8
+--- /dev/null
++++ b/configs/mx6qzmp003_defconfig
+@@ -0,0 +1,7 @@
++CONFIG_ARM=y
++CONFIG_ARCH_MX6=y
++CONFIG_TARGET_MX6QZMP003=y
++CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,DEFAULT_FDT_FILE="imx6q-zmp003.dtb",DDR_MB=1024"
++CONFIG_CMD_GPIO=y
++CONFIG_SPI_FLASH=y
++CONFIG_SPI_FLASH_STMICRO=y
 diff --git a/include/configs/mx6qzmp003.h b/include/configs/mx6qzmp003.h
 new file mode 100644
-index 0000000..50d7cbf
+index 0000000..0cebdb4
 --- /dev/null
 +++ b/include/configs/mx6qzmp003.h
-@@ -0,0 +1,108 @@
+@@ -0,0 +1,107 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -1268,17 +1240,16 @@ index 0000000..50d7cbf
 +#ifndef __MX6QZMP003_CONFIG_H
 +#define __MX6QZMP003_CONFIG_H
 +
-+// #define DEBUG
-+
 +#include <asm/arch/imx-regs.h>
 +#include <asm/imx-common/gpio.h>
 +
 +#define CONFIG_MACH_TYPE		3980
 +
-+// Select the UART to be used for the console. Uses UART 4 by default.
-+// Note that in current Linux builds, the serial console login is not
-+// automatically spawned for UART 5, which could be used as a security 
-+// enhancement in the future (see /etc/init.d/rc_mxc.S).
++/* Select the UART to be used for the console. Uses UART 4 by default.
++ * Note that in current Linux builds, the serial console login is not
++ * automatically spawned for UART 5, which could be used as a security 
++ * enhancement in the future (see /etc/init.d/rc_mxc.S).
++ */
 +#ifndef CONFIG_MXC_UART_BASE
 +#define CONFIG_MXC_UART_BASE		UART4_BASE
 +#endif
@@ -1293,16 +1264,16 @@ index 0000000..50d7cbf
 +#error "Unsupported console UART selected"
 +#endif
 +
-+// Select the device to be used for booting. Uses the SD card by default.
++/* Select the device to be used for booting. Uses the SD card by default. */
 +#define CONFIG_SYS_FSL_USDHC_NUM	2
 +#ifndef CONFIG_SYS_MMC_ENV_DEV
 +#define CONFIG_SYS_MMC_ENV_DEV		0	/* SDHC3 */
 +#endif
 +
-+// Store environment variables in the U-Boot partition.
++/* Store environment variables in the U-Boot partition. */
 +#define CONFIG_SYS_MMC_ENV_PART   	0       
 +
-+// Select the Linux root device to match the U-Boot location.
++/* Select the Linux root device to match the U-Boot location. */
 +#if (CONFIG_SYS_MMC_ENV_DEV == 0)
 +#define CONFIG_MMCROOT	"/dev/mmcblk2p2"
 +#elif (CONFIG_SYS_MMC_ENV_DEV == 0)
