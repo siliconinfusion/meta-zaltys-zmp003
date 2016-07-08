@@ -1212,14 +1212,14 @@ index 0000000..aa897e9
 +#endif
 diff --git a/configs/mx6qzmp003_defconfig b/configs/mx6qzmp003_defconfig
 new file mode 100644
-index 0000000..a1a49d8
+index 0000000..94e10f5
 --- /dev/null
 +++ b/configs/mx6qzmp003_defconfig
 @@ -0,0 +1,7 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_MX6=y
 +CONFIG_TARGET_MX6QZMP003=y
-+CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,DEFAULT_FDT_FILE="imx6q-zmp003.dtb",DDR_MB=1024"
++CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,DDR_MB=1024"
 +CONFIG_CMD_GPIO=y
 +CONFIG_SPI_FLASH=y
 +CONFIG_SPI_FLASH_STMICRO=y
@@ -1336,3 +1336,16 @@ index 0000000..0cebdb4
 +#endif
 +
 +#endif                         /* __MX6QZMP003_CONFIG_H */
+diff --git a/include/configs/mx6sabre_common.h b/include/configs/mx6sabre_common.h
+index 3d599fb..4a354fc 100644
+--- a/include/configs/mx6sabre_common.h
++++ b/include/configs/mx6sabre_common.h
+@@ -192,7 +192,7 @@
+ 
+ 
+ #define CONFIG_BOOTCOMMAND \
+-	"run findfdt;" \
++	"setenv fdt_file imx6q-zmp003.dtb;" \
+ 	"mmc dev ${mmcdev};" \
+ 	"if mmc rescan; then " \
+ 		"if run loadbootscript; then " \
