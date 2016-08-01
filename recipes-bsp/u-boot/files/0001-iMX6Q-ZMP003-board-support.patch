@@ -59,10 +59,10 @@ index 0000000..de2890b
 +
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.c b/board/freescale/mx6qzmp003/mx6qzmp003.c
 new file mode 100644
-index 0000000..144d1e3
+index 0000000..6405ec1
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.c
-@@ -0,0 +1,983 @@
+@@ -0,0 +1,1137 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -559,33 +559,12 @@ index 0000000..144d1e3
 +	{USDHC4_BASE_ADDR},
 +};
 +
-+int mmc_get_env_devno(void)
-+{
-+	u32 soc_sbmr = readl(SRC_BASE_ADDR + 0x4);
-+	u32 dev_no;
-+	u32 bootsel;
-+
-+	bootsel = (soc_sbmr & 0x000000FF) >> 6 ;
-+
-+	/* If not boot from sd/mmc, use default value */
-+	if (bootsel != 1)
-+		return CONFIG_SYS_MMC_ENV_DEV;
-+
-+	/* BOOT_CFG2[3] and BOOT_CFG2[4] */
-+	dev_no = (soc_sbmr & 0x00001800) >> 11;
-+
-+	/* Need to substract 2 to map to the mmc device id
-+	 * see the comments in board_mmc_init function
-+	 */
-+	return (dev_no - 2);
-+}
-+
-+int mmc_map_to_kernel_blk(int dev_no)
-+{
-+	return dev_no + 2;
-+}
-+
 +#define USDHC3_CD_GPIO	IMX_GPIO_NR(7, 8)
++
++int board_mmc_get_env_dev(int devno)
++{
++	return devno - 2;
++}
 +
 +int board_mmc_getcd(struct mmc *mmc)
 +{
@@ -606,12 +585,13 @@ index 0000000..144d1e3
 +
 +int board_mmc_init(bd_t *bis)
 +{
-+	s32 status = 0;
++#ifndef CONFIG_SPL_BUILD
++	int ret;
 +	int i;
 +
 +	/*
 +	 * According to the board_mmc_init() the following map is done:
-+	 * (U-boot device node)    (Physical Port)
++	 * (U-Boot device node)    (Physical Port)
 +	 * mmc0                    SD3
 +	 * mmc1                    eMMC
 +	 */
@@ -632,45 +612,45 @@ index 0000000..144d1e3
 +			printf("Warning: you configured more USDHC controllers"
 +			       "(%d) then supported by the board (%d)\n",
 +			       i + 1, CONFIG_SYS_FSL_USDHC_NUM);
-+			return status;
++			return -EINVAL;
 +		}
 +
-+		status |= fsl_esdhc_initialize(bis, &usdhc_cfg[i]);
-+	}
-+
-+	return status;
-+}
-+
-+int check_mmc_autodetect(void)
-+{
-+	char *autodetect_str = getenv("mmcautodetect");
-+
-+	if ((autodetect_str != NULL) &&
-+		(strcmp(autodetect_str, "yes") == 0)) {
-+		return 1;
++		ret = fsl_esdhc_initialize(bis, &usdhc_cfg[i]);
++		if (ret)
++			return ret;
 +	}
 +
 +	return 0;
-+}
++#else
++	struct src *psrc = (struct src *)SRC_BASE_ADDR;
++	unsigned reg = readl(&psrc->sbmr1) >> 11;
++	/*
++	 * Upon reading BOOT_CFG register the following map is done:
++	 * Bit 11 and 12 of BOOT_CFG register can determine the current
++	 * mmc port
++	 * 0x2                  SD3
++	 * 0x3                  SD4
++	 */
 +
-+void board_late_mmc_env_init(void)
-+{
-+	char cmd[32];
-+	char mmcblk[32];
-+	u32 dev_no = mmc_get_env_devno();
++	switch (reg & 0x3) {
++	case 0x2:
++		imx_iomux_v3_setup_multiple_pads(
++			usdhc3_pads, ARRAY_SIZE(usdhc3_pads));
++		usdhc_cfg[0].esdhc_base = USDHC3_BASE_ADDR;
++		usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
++		gd->arch.sdhc_clk = usdhc_cfg[0].sdhc_clk;
++		break;
++	case 0x3:
++		imx_iomux_v3_setup_multiple_pads(
++			usdhc4_pads, ARRAY_SIZE(usdhc4_pads));
++		usdhc_cfg[0].esdhc_base = USDHC4_BASE_ADDR;
++		usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
++		gd->arch.sdhc_clk = usdhc_cfg[0].sdhc_clk;
++		break;
++	}
 +
-+	if (!check_mmc_autodetect())
-+		return;
-+
-+	setenv_ulong("mmcdev", dev_no);
-+
-+	/* Set mmcblk env */
-+	sprintf(mmcblk, "/dev/mmcblk%dp2 rootwait rw",
-+		mmc_map_to_kernel_blk(dev_no));
-+	setenv("mmcroot", mmcblk);
-+
-+	sprintf(cmd, "mmc dev %d", dev_no);
-+	run_command(cmd, 0);
++	return fsl_esdhc_initialize(bis, &usdhc_cfg[0]);
++#endif
 +}
 +#endif
 +
@@ -870,43 +850,6 @@ index 0000000..144d1e3
 +	return cpu_eth_init(bis);
 +}
 +
-+#ifdef CONFIG_FASTBOOT
-+
-+void board_fastboot_setup(void)
-+{
-+	switch (get_boot_device()) {
-+#if defined(CONFIG_FASTBOOT_STORAGE_SATA)
-+	case SATA_BOOT:
-+		if (!getenv("fastboot_dev"))
-+			setenv("fastboot_dev", "sata");
-+		if (!getenv("bootcmd"))
-+			setenv("bootcmd", "booti sata");
-+		break;
-+#endif /*CONFIG_FASTBOOT_STORAGE_SATA*/
-+#if defined(CONFIG_FASTBOOT_STORAGE_MMC)
-+	case SD3_BOOT:
-+	case MMC3_BOOT:
-+	    if (!getenv("fastboot_dev"))
-+			setenv("fastboot_dev", "mmc1");
-+	    if (!getenv("bootcmd"))
-+			setenv("bootcmd", "booti mmc1");
-+	    break;
-+	case MMC4_BOOT:
-+	    if (!getenv("fastboot_dev"))
-+			setenv("fastboot_dev", "mmc2");
-+	    if (!getenv("bootcmd"))
-+			setenv("bootcmd", "booti mmc2");
-+	    break;
-+#endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
-+	default:
-+		printf("unsupported boot devices\n");
-+		break;
-+	}
-+
-+}
-+
-+#endif /*CONFIG_FASTBOOT*/
-+
 +#ifdef CONFIG_USB_EHCI_MX6
 +#define USB_OTHERREGS_OFFSET	0x800
 +#define UCTRL_PWR_POL		(1 << 9)
@@ -1032,10 +975,6 @@ index 0000000..144d1e3
 +		return -1;
 +#endif
 +
-+#ifdef CONFIG_ENV_IS_IN_MMC
-+	board_late_mmc_env_init();
-+#endif
-+
 +	setup_program_fpga();
 +	return 0;
 +}
@@ -1046,6 +985,221 @@ index 0000000..144d1e3
 +	return 0;
 +}
 +
++
++#ifdef CONFIG_SPL_BUILD
++#include <spl.h>
++#include <libfdt.h>
++
++const struct mx6dq_iomux_ddr_regs mx6_ddr_ioregs = {
++	.dram_sdclk_0 =  0x00020030,
++	.dram_sdclk_1 =  0x00020030,
++	.dram_cas =  0x00020030,
++	.dram_ras =  0x00020030,
++	.dram_reset =  0x00020030,
++	.dram_sdcke0 =  0x00003000,
++	.dram_sdcke1 =  0x00003000,
++	.dram_sdba2 =  0x00000000,
++	.dram_sdodt0 =  0x00003030,
++	.dram_sdodt1 =  0x00003030,
++	.dram_sdqs0 =  0x00000030,
++	.dram_sdqs1 =  0x00000030,
++	.dram_sdqs2 =  0x00000030,
++	.dram_sdqs3 =  0x00000030,
++	.dram_sdqs4 =  0x00000030,
++	.dram_sdqs5 =  0x00000030,
++	.dram_sdqs6 =  0x00000030,
++	.dram_sdqs7 =  0x00000030,
++	.dram_dqm0 =  0x00020030,
++	.dram_dqm1 =  0x00020030,
++	.dram_dqm2 =  0x00020030,
++	.dram_dqm3 =  0x00020030,
++	.dram_dqm4 =  0x00020030,
++	.dram_dqm5 =  0x00020030,
++	.dram_dqm6 =  0x00020030,
++	.dram_dqm7 =  0x00020030,
++};
++
++const struct mx6dq_iomux_ddr_regs mx6dqp_ddr_ioregs = {
++	.dram_sdclk_0 =  0x00000030,
++	.dram_sdclk_1 =  0x00000030,
++	.dram_cas =  0x00000030,
++	.dram_ras =  0x00000030,
++	.dram_reset =  0x00000030,
++	.dram_sdcke0 =  0x00003000,
++	.dram_sdcke1 =  0x00003000,
++	.dram_sdba2 =  0x00000000,
++	.dram_sdodt0 =  0x00003030,
++	.dram_sdodt1 =  0x00003030,
++	.dram_sdqs0 =  0x00000030,
++	.dram_sdqs1 =  0x00000030,
++	.dram_sdqs2 =  0x00000030,
++	.dram_sdqs3 =  0x00000030,
++	.dram_sdqs4 =  0x00000030,
++	.dram_sdqs5 =  0x00000030,
++	.dram_sdqs6 =  0x00000030,
++	.dram_sdqs7 =  0x00000030,
++	.dram_dqm0 =  0x00000030,
++	.dram_dqm1 =  0x00000030,
++	.dram_dqm2 =  0x00000030,
++	.dram_dqm3 =  0x00000030,
++	.dram_dqm4 =  0x00000030,
++	.dram_dqm5 =  0x00000030,
++	.dram_dqm6 =  0x00000030,
++	.dram_dqm7 =  0x00000030,
++};
++
++const struct mx6dq_iomux_grp_regs mx6_grp_ioregs = {
++	.grp_ddr_type =  0x000C0000,
++	.grp_ddrmode_ctl =  0x00020000,
++	.grp_ddrpke =  0x00000000,
++	.grp_addds =  0x00000030,
++	.grp_ctlds =  0x00000030,
++	.grp_ddrmode =  0x00020000,
++	.grp_b0ds =  0x00000030,
++	.grp_b1ds =  0x00000030,
++	.grp_b2ds =  0x00000030,
++	.grp_b3ds =  0x00000030,
++	.grp_b4ds =  0x00000030,
++	.grp_b5ds =  0x00000030,
++	.grp_b6ds =  0x00000030,
++	.grp_b7ds =  0x00000030,
++};
++
++const struct mx6_mmdc_calibration mx6_mmcd_calib = {
++	.p0_mpwldectrl0 =  0x001F001F,
++	.p0_mpwldectrl1 =  0x001F001F,
++	.p1_mpwldectrl0 =  0x00440044,
++	.p1_mpwldectrl1 =  0x00440044,
++	.p0_mpdgctrl0 =  0x434B0350,
++	.p0_mpdgctrl1 =  0x034C0359,
++	.p1_mpdgctrl0 =  0x434B0350,
++	.p1_mpdgctrl1 =  0x03650348,
++	.p0_mprddlctl =  0x4436383B,
++	.p1_mprddlctl =  0x39393341,
++	.p0_mpwrdlctl =  0x35373933,
++	.p1_mpwrdlctl =  0x48254A36,
++};
++
++const struct mx6_mmdc_calibration mx6dqp_mmcd_calib = {
++	.p0_mpwldectrl0 =  0x001B001E,
++	.p0_mpwldectrl1 =  0x002E0029,
++	.p1_mpwldectrl0 =  0x001B002A,
++	.p1_mpwldectrl1 =  0x0019002C,
++	.p0_mpdgctrl0 =  0x43240334,
++	.p0_mpdgctrl1 =  0x0324031A,
++	.p1_mpdgctrl0 =  0x43340344,
++	.p1_mpdgctrl1 =  0x03280276,
++	.p0_mprddlctl =  0x44383A3E,
++	.p1_mprddlctl =  0x3C3C3846,
++	.p0_mpwrdlctl =  0x2E303230,
++	.p1_mpwrdlctl =  0x38283E34,
++};
++
++/* MT41K128M16JT-125 */
++static struct mx6_ddr3_cfg mem_ddr = {
++	.mem_speed = 1600,
++	.density = 2,
++	.width = 16,
++	.banks = 8,
++	.rowaddr = 14,
++	.coladdr = 10,
++	.pagesz = 2,
++	.trcd = 1375,
++	.trcmin = 4875,
++	.trasmin = 3500,
++};
++
++static void ccgr_init(void)
++{
++	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
++
++	writel(0x00C03F3F, &ccm->CCGR0);
++	writel(0x0030FC03, &ccm->CCGR1);
++	writel(0x0FFFC000, &ccm->CCGR2);
++	writel(0x3FF00000, &ccm->CCGR3);
++	writel(0x00FFF300, &ccm->CCGR4);
++	writel(0x0F0000C3, &ccm->CCGR5);
++	writel(0x000003FF, &ccm->CCGR6);
++}
++
++static void gpr_init(void)
++{
++	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
++
++	/* enable AXI cache for VDOA/VPU/IPU */
++	writel(0xF00000CF, &iomux->gpr[4]);
++	if (is_mx6dqp()) {
++		/* set IPU AXI-id1 Qos=0x1 AXI-id0/2/3 Qos=0x7 */
++		writel(0x007F007F, &iomux->gpr[6]);
++		writel(0x007F007F, &iomux->gpr[7]);
++	} else {
++		/* set IPU AXI-id0 Qos=0xf(bypass) AXI-id1 Qos=0x7 */
++		writel(0x007F007F, &iomux->gpr[6]);
++		writel(0x007F007F, &iomux->gpr[7]);
++	}
++}
++
++/*
++ * This section requires the differentiation between iMX6 Sabre boards, but
++ * for now, it will configure only for the mx6q variant.
++ */
++static void spl_dram_init(void)
++{
++	struct mx6_ddr_sysinfo sysinfo = {
++		/* width of data bus:0=16,1=32,2=64 */
++		.dsize = 2,
++		/* config for full 4GB range so that get_mem_size() works */
++		.cs_density = 32, /* 32Gb per CS */
++		/* single chip select */
++		.ncs = 1,
++		.cs1_mirror = 0,
++		.rtt_wr = 1 /*DDR3_RTT_60_OHM*/,	/* RTT_Wr = RZQ/4 */
++		.rtt_nom = 1 /*DDR3_RTT_60_OHM*/,	/* RTT_Nom = RZQ/4 */
++		.walat = 1,	/* Write additional latency */
++		.ralat = 5,	/* Read additional latency */
++		.mif3_mode = 3,	/* Command prediction working mode */
++		.bi_on = 1,	/* Bank interleaving enabled */
++		.sde_to_rst = 0x10,	/* 14 cycles, 200us (JEDEC default) */
++		.rst_to_cke = 0x23,	/* 33 cycles, 500us (JEDEC default) */
++		.ddr_type = DDR_TYPE_DDR3,
++	};
++
++	if (is_mx6dqp()) {
++		mx6dq_dram_iocfg(64, &mx6dqp_ddr_ioregs, &mx6_grp_ioregs);
++		mx6_dram_cfg(&sysinfo, &mx6dqp_mmcd_calib, &mem_ddr);
++	} else {
++		mx6dq_dram_iocfg(64, &mx6_ddr_ioregs, &mx6_grp_ioregs);
++		mx6_dram_cfg(&sysinfo, &mx6_mmcd_calib, &mem_ddr);
++	}
++}
++
++void board_init_f(ulong dummy)
++{
++	/* setup AIPS and disable watchdog */
++	arch_cpu_init();
++
++	ccgr_init();
++	gpr_init();
++
++	/* iomux and setup of i2c */
++	board_early_init_f();
++
++	/* setup GP timer */
++	timer_init();
++
++	/* UART clocks enabled and gd valid - init serial console */
++	preloader_console_init();
++
++	/* DDR initialization */
++	spl_dram_init();
++
++	/* Clear the BSS. */
++	memset(__bss_start, 0, __bss_end - __bss_start);
++
++	/* load/boot image from boot device */
++	board_init_r(NULL, 0);
++}
++#endif
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.cfg b/board/freescale/mx6qzmp003/mx6qzmp003.cfg
 new file mode 100644
 index 0000000..aa897e9

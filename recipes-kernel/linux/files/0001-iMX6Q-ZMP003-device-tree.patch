@@ -66,10 +66,10 @@ index 0000000..67a9a63
 +*/
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dtsi b/arch/arm/boot/dts/imx6q-zmp003.dtsi
 new file mode 100644
-index 0000000..bf64fee
+index 0000000..ac94836
 --- /dev/null
 +++ b/arch/arm/boot/dts/imx6q-zmp003.dtsi
-@@ -0,0 +1,637 @@
+@@ -0,0 +1,640 @@
 +/*
 + * Copyright 2015 Silicon Infusion Ltd.
 + *
@@ -94,6 +94,8 @@ index 0000000..bf64fee
 +		mxcfb1 = &mxcfb2;
 +		mxcfb2 = &mxcfb3;
 +		mxcfb3 = &mxcfb4;
++		mmc2 = &usdhc3;
++		mmc3 = &usdhc4;
 +	};
 +	
 +	memory {
@@ -680,6 +682,7 @@ index 0000000..bf64fee
 +	pinctrl-0 = <&pinctrl_usdhc3>;
 +	bus-width = <4>;
 +	cd-gpios = <&gpio7 8 0>;
++        cd-inverted;
 +	no-1-8-v;
 +	keep-power-in-suspend;
 +	enable-sdio-wakeup;
