@@ -1,4 +1,8 @@
-## MODIFYING THE SOURCE CODE
+DEVELOPMENT NOTES
+=================
+
+MODIFYING THE SOURCE CODE
+-------------------------
 
 After the initial build, the patched U-Boot and Linux kernel files can
 be found in the following git source trees:
@@ -44,7 +48,8 @@ repository during development. However, they do not need to be checked
 in for each rebuild.
 
 
-## UPDATING THE PATCH FILES
+UPDATING THE PATCH FILES
+------------------------
 
 Once any source code changes have been tested, they should be included
 in the appropriate patch set for the ZMP003 board support layer.  This
@@ -54,7 +59,8 @@ If necessary, the appropriate .bbappend file for the recipe should be
 updated appropriately.
 
 
-## BUILDING THE 'OUT OF TREE' CROSS COMPILER
+BUILDING THE 'OUT OF TREE' CROSS COMPILER
+-----------------------------------------
 
 Note that the above instructions apply for changes to files managed by
 the Yocto build process. For 'manually' compiling additional libraries

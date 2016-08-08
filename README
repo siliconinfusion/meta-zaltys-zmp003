@@ -1,4 +1,5 @@
-# BOARD SUPPORT LAYER FOR THE SILICON INFUSION ZMP003 CPU BOARD
+BOARD SUPPORT LAYER FOR THE SILICON INFUSION ZMP003 CPU BOARD
+=============================================================
 
 This is the YOCTO board support layer for the ZMP003 iMX6Q CPU card.
 It is based on the Freescale Community BSP (freescale.github.io), with
@@ -8,7 +9,8 @@ This layer is compatible with the Freescale Community BSP release 2.1
 (krogoth).
 
 
-## BUILD SETUP
+BUILD SETUP
+-----------
 
 Setup the Freescale Community BSP as per their instructions, then edit
 the MACHINE variable in <build-dir>/conf/local.conf to be:-
