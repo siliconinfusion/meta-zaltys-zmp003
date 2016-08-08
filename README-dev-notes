@@ -1,0 +1,65 @@
+## MODIFYING THE SOURCE CODE
+
+After the initial build, the patched U-Boot and Linux kernel files can
+be found in the following git source trees:
+
+  <build-dir>/tmp/work/imx6qzmp003-poky-linux-gnueabi/u-boot-imx/<version>/git
+  <build-dir>/tmp/work/imx6qzmp003-poky-linux-gnueabi/linux-imx/<version>/git
+
+Running the 'git status' command in these directories should highlight
+the files which have been patched. Note that this shows the cumulative
+affect of all layer patches which have been applied. The only U-Boot
+files which are relevant to this layer are as follows:
+
+  boards.cfg
+  board/freescale/mx6qzmp003/*
+  include/configs/mx6qzmp003.h
+
+The relevant Linux files are as follows:
+
+  arch/arm/boot/dts/imx6q-zmp003.dts
+  arch/arm/boot/dts/imx6q-zmp003.dtsi
+
+For development purposes, these files can now be edited
+in-place. After any changes, Yocto rebuilds can be forced in order to
+pick up the modifications.  Forcing a restart of the U-Boot and Linux
+configuration phases can be carried out as follows:
+
+  $ bitbake -f -c configure u-boot
+  $ bitbake -f -c configure linux-imx
+
+This must then be followed by the full rebuild of the image. For
+example:
+
+  $ bitbake fsl-image-gui
+
+For changes to the Linux device tree files there is no need to
+recompile the kernel, so the build can be reset to the kernel install
+phase as follows:
+
+  $ bitbake -f -c install linux-imx
+
+Changes to the source files can be managed using the local git
+repository during development. However, they do not need to be checked
+in for each rebuild.
+
+
+## UPDATING THE PATCH FILES
+
+Once any source code changes have been tested, they should be included
+in the appropriate patch set for the ZMP003 board support layer.  This
+can be done using appropriate git commands to create a new patch file
+to replace/augment the .patch files contained in this layer's recipes.
+If necessary, the appropriate .bbappend file for the recipe should be
+updated appropriately.
+
+
+## BUILDING THE 'OUT OF TREE' CROSS COMPILER
+
+Note that the above instructions apply for changes to files managed by
+the Yocto build process. For 'manually' compiling additional libraries
+and applications outside of the Yocto build process, the general
+purpose cross compiler tool chain is required. This can be built as
+follows:
+
+  $ bitbake meta-ide-support

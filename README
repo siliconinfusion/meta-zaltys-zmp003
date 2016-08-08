@@ -1,96 +1,28 @@
-*** BOARD SUPPORT LAYER FOR SILICON INFUSION ZMP003 ***
+# BOARD SUPPORT LAYER FOR THE SILICON INFUSION ZMP003 CPU BOARD
 
-This is the board support layer for the ZMP003 iMX6Q CPU card. It is based on
-the standard Freescale distribution, with an additional target board called 
-'imx6qzmp003'.
+This is the YOCTO board support layer for the ZMP003 iMX6Q CPU card.
+It is based on the Freescale Community BSP (freescale.github.io), with
+an additional target board called 'imx6qzmp003'.
 
-** BUILD SETUP WITH CURRENT PATCHES **
+This layer is compatible with the Freescale Community BSP release 2.1
+(krogoth).
 
-Since this target is not included in the standard Freescale environment, some
-manual changes must be made. Start by creating a new build directory using the
-standard Freescale setup script:
 
-$ MACHINE=imx6qsabresd source fsl-setup-release.sh -b <build dir> -e <backend>
+## BUILD SETUP
 
-This configures the build for the Freescale Sabre development board, so it now
-needs to be modified to support the ZMP003. Edit the <build dir>/conf/local.conf
-file to update the specified target, so that the MACHINE variable is set as
-follows:
+Setup the Freescale Community BSP as per their instructions, then edit
+the MACHINE variable in <build-dir>/conf/local.conf to be:-
 
-MACHINE ??= 'imx6qzmp003'
+  MACHINE ??= 'imx6qzmp003'
 
-The Yocto layer which includes this target will also need to be incorporated
-into the bitbake build by editing the <build dir>/conf/bblayers.conf file.
-This is achieved by appending it to the BBLAYERS variable using the additional
-configuration line:
+and add this layer to <build-dir>/conf/bblayers.conf with:-
 
-BBLAYERS += " <layer dir>/meta-zaltys-zmp003 "
+  BBLAYERS += " <layer-dir>/meta-zaltys-zmp003 "
 
-Where <layer dir> is the fully qualified path to the directory which contains
-this layer definition.
+where <layer-dir> is the fully qualified path to the directory which
+contains this layer definition.
 
-With these modifications in place, it should then be possible to build any of 
-the Freescale supported images provided by the meta-fsl-bsp-release layer, 
-targeted at the ZMP003 board.
 
-** MODIFYING THE SOURCE CODE **
-
-After the initial build, the patched U-Boot and Linux kernel files can be 
-found in the following git source trees:
-
-<build dir>/tmp/work/imx6qzmp003-poky-linux-gnueabi/u-boot-imx/2014.04-r0/git
-<build dir>/tmp/work/imx6qzmp003-poky-linux-gnueabi/linux-imx/<version>/git
-
-Running the 'git status' command in these directories should highlight the 
-files which have been patched. Note that this shows the cumulative affect of
-all layer patches which have been applied. The only U-Boot files which are 
-relevant to this layer are as follows:
-
-boards.cfg
-board/freescale/mx6qzmp003/*
-include/configs/mx6qzmp003.h
-
-The relevant Linux files are as follows:
-
-arch/arm/boot/dts/imx6q-zmp003.dts
-arch/arm/boot/dts/imx6q-zmp003.dtsi
-
-For development purposes, these files can now be edited in-place. After any 
-changes, Yocto rebuilds can be forced in order to pick up the modifications. 
-Forcing a restart of the U-Boot and Linux configuration phases can be carried 
-out as follows:
-
-$ bitbake -f -c configure u-boot
-$ bitbake -f -c configure linux-imx
-
-This must then be followed by the full rebuild of the image. For example:
-
-$ bitbake fsl-image-gui
-
-For changes to the Linux device tree files there is no need to recompile the
-kernel, so the build can be reset to the kernel install phase as follows:
-
-$ bitbake -f -c install linux-imx
-
-Changes to the source files can be managed using the local git repository 
-during development. However, they do not need to be checked in for each rebuild.
-
-** UPDATING THE PATCH FILES **
-
-Once any source code changes have been tested, they can be included in the
-appropriate patch set for the ZMP003 board support layer. Assuming that any
-changes (including the changes from the original patch set) have been checked
-in to the local git repository, the new patches can then be created using the
-'git format-patch' command. If necessary, the appropriate .bbappend file for
-the Yocto recipe should be updated to include a reference to each new patch
-file and remove references to any superseded patch files.
-
-** BUILDING THE 'OUT OF TREE' CROSS COMPILER **
-
-Note that the above instructions apply for changes to files managed by the 
-Yocto build process. For 'manually' compiling additional libraries and 
-applications outside of the Yocto build process, the general purpose cross 
-compiler tool chain is required. This can be built as follows:
-
-$ bitbake meta-ide-support
-
+--
+Silicon Infusion Ltd
+8 August 2016

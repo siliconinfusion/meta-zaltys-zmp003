@@ -1,5 +1,5 @@
 # Copyright (C) 2015 - 2016 Silicon Infusion Ltd
-# Released under the MIT license (see COPYING.MIT for the terms)
+# Released under an MIT licence, see LICENCE file for details.
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
