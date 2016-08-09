@@ -7,8 +7,8 @@ MODIFYING THE SOURCE CODE
 After the initial build, the patched U-Boot and Linux kernel files can
 be found in the following git source trees:
 
-  <build-dir>/tmp/work/imx6qzmp003-poky-linux-gnueabi/u-boot-imx/<version>/git
-  <build-dir>/tmp/work/imx6qzmp003-poky-linux-gnueabi/linux-imx/<version>/git
+  <build-dir>/tmp/work/imx6qzmp003-poky-linux-gnueabi/u-boot-fslc/<version>/git
+  <build-dir>/tmp/work/imx6qzmp003-poky-linux-gnueabi/linux-fslc-imx/<version>/git
 
 Running the 'git status' command in these directories should highlight
 the files which have been patched. Note that this shows the cumulative
@@ -29,8 +29,8 @@ in-place. After any changes, Yocto rebuilds can be forced in order to
 pick up the modifications.  Forcing a restart of the U-Boot and Linux
 configuration phases can be carried out as follows:
 
-  $ bitbake -f -c configure u-boot
-  $ bitbake -f -c configure linux-imx
+  $ bitbake -f -c configure u-boot-fslc
+  $ bitbake -f -c configure linux-fslc-imx
 
 This must then be followed by the full rebuild of the image. For
 example:
@@ -41,7 +41,7 @@ For changes to the Linux device tree files there is no need to
 recompile the kernel, so the build can be reset to the kernel install
 phase as follows:
 
-  $ bitbake -f -c install linux-imx
+  $ bitbake -f -c install linux-fslc-imx
 
 Changes to the source files can be managed using the local git
 repository during development. However, they do not need to be checked
