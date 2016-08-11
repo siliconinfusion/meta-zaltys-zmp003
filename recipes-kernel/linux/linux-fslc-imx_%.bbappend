@@ -9,6 +9,5 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 # to a specific kernel release number.
 SRC_URI += "file://0001-iMX6Q-ZMP003-device-tree.patch"
 
-# Added kernel configuration fragments
-SRC_URI += "file://spi.cfg"
-SRC_URI += "file://wifi.cfg"
+# Supply our own kernel configuration
+SRC_URI += "file://defconfig"
