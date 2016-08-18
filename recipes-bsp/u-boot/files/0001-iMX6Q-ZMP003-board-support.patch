@@ -1369,20 +1369,30 @@ new file mode 100644
 index 0000000..94e10f5
 --- /dev/null
 +++ b/configs/mx6qzmp003_defconfig
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,17 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_MX6=y
 +CONFIG_TARGET_MX6QZMP003=y
 +CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,DDR_MB=1024"
++CONFIG_BOOTDELAY=3
++CONFIG_HUSH_PARSER=y
++CONFIG_CMD_BOOTZ=y
++CONFIG_CMD_MMC=y
 +CONFIG_CMD_GPIO=y
++CONFIG_CMD_EXT2=y
++CONFIG_CMD_EXT4=y
++CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FAT=y
++CONFIG_CMD_FS_GENERIC=y
 +CONFIG_SPI_FLASH=y
 +CONFIG_SPI_FLASH_STMICRO=y
++CONFIG_OF_LIBFDT=y
 diff --git a/include/configs/mx6qzmp003.h b/include/configs/mx6qzmp003.h
 new file mode 100644
 index 0000000..0cebdb4
 --- /dev/null
 +++ b/include/configs/mx6qzmp003.h
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,110 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -1441,6 +1451,9 @@ index 0000000..0cebdb4
 + * reference design, so uses the same common configuration settings.
 + */
 +#include "mx6sabre_common.h"
++
++#undef CONFIG_CMD_IMLS
++#undef CONFIG_CMD_FASTBOOT
 +
 +/* Override the choice of Ethernet PHY from the Freescale reference design */
 +#undef CONFIG_PHY_ATHEROS
