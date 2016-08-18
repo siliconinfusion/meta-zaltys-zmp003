@@ -1,3 +1,17 @@
+***
+*** IMPORTANT NOTE: This is branch imx-3.14.28-1.0.0_ga of the
+*** meta-zaltys-platform layer.
+***
+*** This branch builds with the Freescale Release BSP, version
+*** imx-3.14.28-1.0.0_ga from Freescale Inc, (not the Freescale
+*** Community BSP).
+***
+*** Use the following command to initialize the build environment:-
+***
+***   repo init -u git://git.freescale.com/imx/fsl-arm-yocto-bsp.git -b imx-3.14.28-1.0.0_ga
+***
+
+
 *** BOARD SUPPORT LAYER FOR SILICON INFUSION ZMP003 ***
 
 This is the board support layer for the ZMP003 iMX6Q CPU card. It is based on
