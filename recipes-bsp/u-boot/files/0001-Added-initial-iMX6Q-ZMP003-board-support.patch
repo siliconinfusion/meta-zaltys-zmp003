@@ -16,10 +16,10 @@ index 0000000..de2890b
 +
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.c b/board/freescale/mx6qzmp003/mx6qzmp003.c
 new file mode 100644
-index 0000000..4df29f4
+index 0000000..b96b6c0
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.c
-@@ -0,0 +1,1056 @@
+@@ -0,0 +1,1120 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -99,8 +99,14 @@ index 0000000..4df29f4
 +
 +int dram_init(void)
 +{
-+	gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
-+
++#ifdef CONFIG_ZMP003_DDR_1GB
++	gd->ram_size = (1024 * 1024 * 1024);
++#endif
++#ifdef CONFIG_ZMP003_DDR_4GB
++        /* Only use 3.5GB currently, until iMX MMDC MDASP register
++           configuration problem resolved -- see mx6qzmp003.cfg */
++	gd->ram_size = (3584 * 1024 * 1024);
++#endif
 +	return 0;
 +}
 +
@@ -189,9 +195,11 @@ index 0000000..4df29f4
 +};
 +
 +static iomux_v3_cfg_t const onboard_fpga_pads[] = {
-+	MX6_PAD_EIM_A24__GPIO5_IO04 | MUX_PAD_CTRL(NO_PAD_CTRL),  /* PROGB */
-+	MX6_PAD_SD3_DAT6__GPIO6_IO18 | MUX_PAD_CTRL(NO_PAD_CTRL), /* CSN */
-+	MX6_PAD_EIM_D21__GPIO3_IO21 | MUX_PAD_CTRL(NO_PAD_CTRL),  /* MODE1 */
++	MX6_PAD_EIM_A24__GPIO5_IO04   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* PROGB */
++	MX6_PAD_SD3_DAT6__GPIO6_IO18  | MUX_PAD_CTRL(NO_PAD_CTRL),  /* CSN */
++	MX6_PAD_EIM_D21__GPIO3_IO21   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* MODE1 */
++        MX6_PAD_ENET_TXD1__GPIO1_IO29 | MUX_PAD_CTRL(NO_PAD_CTRL),  /* INIT */
++        MX6_PAD_ENET_TXD0__GPIO1_IO30 | MUX_PAD_CTRL(NO_PAD_CTRL),  /* DONE */
 +};
 +
 +static iomux_v3_cfg_t const onboard_gps_pads[] = {
@@ -207,6 +215,22 @@ index 0000000..4df29f4
 +        MX6_PAD_NANDF_WP_B__GPIO6_IO09 | MUX_PAD_CTRL(NO_PAD_CTRL), /* int1 */
 +};
 +
++static iomux_v3_cfg_t const onboard_ext_gpio_pads[] = {
++        MX6_PAD_SD2_CLK__GPIO1_IO10   | MUX_PAD_CTRL(NO_PAD_CTRL), /* EXT_GPIO0 */
++        MX6_PAD_SD2_CMD__GPIO1_IO11   | MUX_PAD_CTRL(NO_PAD_CTRL), /* EXT_GPIO1 */
++        MX6_PAD_SD2_DAT3__GPIO1_IO12  | MUX_PAD_CTRL(NO_PAD_CTRL), /* EXT_GPIO2 */
++        MX6_PAD_SD2_DAT2__GPIO1_IO13  | MUX_PAD_CTRL(NO_PAD_CTRL), /* EXT_GPIO3 */
++        MX6_PAD_SD1_DAT0__GPIO1_IO16  | MUX_PAD_CTRL(NO_PAD_CTRL), /* EXT_GPIO4 */
++        MX6_PAD_SD1_DAT1__GPIO1_IO17  | MUX_PAD_CTRL(NO_PAD_CTRL), /* EXT_GPIO5 */
++        MX6_PAD_SD1_DAT2__GPIO1_IO19  | MUX_PAD_CTRL(NO_PAD_CTRL), /* EXT_GPIO6 */
++        MX6_PAD_SD1_DAT3__GPIO1_IO21  | MUX_PAD_CTRL(NO_PAD_CTRL), /* EXT_GPIO7 */
++};
++
++static iomux_v3_cfg_t const onboard_misc_pads[] = {
++        /* Temporarily set them up as GPIO for board testing purposes */
++        MX6_PAD_SD3_DAT7__GPIO6_IO17  | MUX_PAD_CTRL(NO_PAD_CTRL), /* SDWNB */
++};
++
 +static void setup_pcie(void)
 +{
 +	imx_iomux_v3_setup_multiple_pads(pcie_pads, ARRAY_SIZE(pcie_pads));
@@ -215,6 +239,8 @@ index 0000000..4df29f4
 +#define GPIO_C3FPGA_PROGB	IMX_GPIO_NR(5, 4)
 +#define GPIO_C3FPGA_CSN		IMX_GPIO_NR(6, 18)
 +#define GPIO_C3FPGA_MODE1	IMX_GPIO_NR(3, 21)
++#define GPIO_C3FPGA_INIT	IMX_GPIO_NR(1, 29)
++#define GPIO_C3FPGA_DONE	IMX_GPIO_NR(1, 30)
 +
 +/* Places FPGA in reset and selects SPI master mode flash programming */
 +static void setup_iomux_fpga(void)
@@ -223,6 +249,8 @@ index 0000000..4df29f4
 +	gpio_direction_output(GPIO_C3FPGA_PROGB, 0);
 +	gpio_direction_output(GPIO_C3FPGA_CSN, 1);
 +	gpio_direction_output(GPIO_C3FPGA_MODE1, 0);
++        gpio_direction_input(GPIO_C3FPGA_INIT);
++        gpio_direction_input(GPIO_C3FPGA_DONE);
 +}
 +
 +/* Releases FPGA reset and initates SPI flash programming */
@@ -231,7 +259,7 @@ index 0000000..4df29f4
 +{
 +	udelay (2);
 +	gpio_set_value(GPIO_C3FPGA_PROGB, 1);
-+	printf ("Programming onboard FPGA (not waiting for DONE)\n");	
++	printf ("Programming onboard FPGA (not waiting for DONE)\n");
 +	udelay (2);	
 +}
 +
@@ -252,9 +280,44 @@ index 0000000..4df29f4
 +	gpio_direction_output(GPIO_GPS_ONOFF, 0);
 +}
 +
++#define GPIO_CLC_CPU_SYS_INT0 IMX_GPIO_NR(6,7)
++#define GPIO_CLC_CPU_SYS_INT1 IMX_GPIO_NR(6,9)
++
 +static void setup_iomux_clc(void)
 +{
 +        imx_iomux_v3_setup_multiple_pads(clc_cpu_sys_pads, ARRAY_SIZE(clc_cpu_sys_pads));	
++	gpio_direction_input(GPIO_CLC_CPU_SYS_INT0);
++	gpio_direction_input(GPIO_CLC_CPU_SYS_INT1);
++}
++
++#define GPIO_EXT_GPIO0  IMX_GPIO_NR(1,10)
++#define GPIO_EXT_GPIO1  IMX_GPIO_NR(1,11)
++#define GPIO_EXT_GPIO2  IMX_GPIO_NR(1,12)
++#define GPIO_EXT_GPIO3  IMX_GPIO_NR(1,13)
++#define GPIO_EXT_GPIO4  IMX_GPIO_NR(1,16)
++#define GPIO_EXT_GPIO5  IMX_GPIO_NR(1,17)
++#define GPIO_EXT_GPIO6  IMX_GPIO_NR(1,19)
++#define GPIO_EXT_GPIO7  IMX_GPIO_NR(1,21)
++
++static void setup_ext_gpio(void)
++{
++        imx_iomux_v3_setup_multiple_pads(onboard_ext_gpio_pads, ARRAY_SIZE(onboard_ext_gpio_pads));	
++	gpio_direction_output(GPIO_EXT_GPIO0, 0);
++	gpio_direction_output(GPIO_EXT_GPIO1, 0);
++	gpio_direction_output(GPIO_EXT_GPIO2, 0);
++	gpio_direction_output(GPIO_EXT_GPIO3, 0);
++	gpio_direction_output(GPIO_EXT_GPIO4, 0);
++	gpio_direction_output(GPIO_EXT_GPIO5, 0);
++	gpio_direction_output(GPIO_EXT_GPIO6, 0);
++	gpio_direction_output(GPIO_EXT_GPIO7, 0);
++}
++
++#define GPIO_MISC_SDWNB IMX_GPIO_NR(6, 17)
++
++static void setup_iomux_misc(void)
++{
++        imx_iomux_v3_setup_multiple_pads(onboard_misc_pads, ARRAY_SIZE(onboard_misc_pads));	
++	gpio_direction_input(GPIO_MISC_SDWNB);
 +}
 +
 +static void setup_standby_mode(void)
@@ -904,11 +967,20 @@ index 0000000..4df29f4
 +
 +int board_early_init_f(void)
 +{
++	setup_ext_gpio();
++	gpio_set_value(GPIO_EXT_GPIO0, 1);  /* for boot debug */
++
 +	setup_iomux_uart();
++	gpio_set_value(GPIO_EXT_GPIO1, 1);  /* for boot debug */
 +	setup_iomux_fpga();
++	gpio_set_value(GPIO_EXT_GPIO2, 1);  /* for boot debug */
 +        setup_iomux_gps();
++	gpio_set_value(GPIO_EXT_GPIO3, 1);  /* for boot debug */
 +        setup_iomux_clc();
-+	
++	gpio_set_value(GPIO_EXT_GPIO4, 1);  /* for boot debug */
++	setup_iomux_misc();
++	gpio_set_value(GPIO_EXT_GPIO5, 1);  /* for boot debug */
++
 +        setup_standby_mode();
 +
 +#if defined(CONFIG_VIDEO_IPUV3)
@@ -927,6 +999,8 @@ index 0000000..4df29f4
 +
 +int board_init(void)
 +{
++	gpio_set_value(GPIO_EXT_GPIO6, 1);  /* for boot debug */
++
 +	/* address of boot parameters */
 +	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 +
@@ -950,6 +1024,9 @@ index 0000000..4df29f4
 +int board_late_init(void)
 +{
 +	int ret = 0;
++
++	gpio_set_value(GPIO_EXT_GPIO7, 1);  /* for boot debug */
++
 +#ifdef CONFIG_CMD_BMODE
 +	add_board_boot_modes(board_boot_modes);
 +#endif
@@ -1033,10 +1110,6 @@ index 0000000..4df29f4
 +	MX6_PAD_ENET_RX_ER__USB_OTG_ID | MUX_PAD_CTRL(NO_PAD_CTRL),
 +};
 +
-+iomux_v3_cfg_t const usb_hc1_pads[] = {
-+	MX6_PAD_ENET_TXD1__GPIO1_IO29 | MUX_PAD_CTRL(NO_PAD_CTRL),
-+};
-+
 +int board_ehci_hcd_init(int port)
 +{
 +	switch (port) {
@@ -1046,10 +1119,6 @@ index 0000000..4df29f4
 +
 +		/*set daisy chain for otg_pin_id on 6q. for 6dl, this bit is reserved*/
 +		mxc_iomux_set_gpr_register(1, 13, 1, 0);
-+		break;
-+	case 1:
-+		imx_iomux_v3_setup_multiple_pads(usb_hc1_pads,
-+			ARRAY_SIZE(usb_hc1_pads));
 +		break;
 +	default:
 +		printf("MXC USB port %d not yet supported\n", port);
@@ -1063,25 +1132,20 @@ index 0000000..4df29f4
 +	switch (port) {
 +	case 0:
 +		break;
-+	case 1:
-+		if (on)
-+			gpio_direction_output(IMX_GPIO_NR(1, 29), 1);
-+		else
-+			gpio_direction_output(IMX_GPIO_NR(1, 29), 0);
-+		break;
 +	default:
 +		printf("MXC USB port %d not yet supported\n", port);
 +		return 1;
 +	}
 +	return 0;
 +}
++
 +#endif
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.cfg b/board/freescale/mx6qzmp003/mx6qzmp003.cfg
 new file mode 100644
-index 0000000..aa897e9
+index 0000000..c503950
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.cfg
-@@ -0,0 +1,158 @@
+@@ -0,0 +1,192 @@
 +/*
 + * Copyright (C) 2011-2014 Freescale Semiconductor, Inc.
 + * Jason Liu <r64343@freescale.com>
@@ -1130,6 +1194,8 @@ index 0000000..aa897e9
 + *      Address   absolute address of the register
 + *      value     value to be stored in the register
 + */
++
++/* DDR IOMUX */
 +DATA 4, 0x020e0798, 0x000C0000
 +DATA 4, 0x020e0758, 0x00000000
 +DATA 4, 0x020e0588, 0x00000030
@@ -1168,6 +1234,8 @@ index 0000000..aa897e9
 +DATA 4, 0x020e0510, 0x00000030
 +DATA 4, 0x020e05bc, 0x00000030
 +DATA 4, 0x020e05c4, 0x00000030
++
++/* DDR Calibration settings */
 +DATA 4, 0x021b0800, 0xa1390003
 +DATA 4, 0x021b080c, 0x001F001F
 +DATA 4, 0x021b0810, 0x001F001F
@@ -1191,6 +1259,9 @@ index 0000000..aa897e9
 +DATA 4, 0x021b4828, 0x33333333
 +DATA 4, 0x021b08b8, 0x00000800
 +DATA 4, 0x021b48b8, 0x00000800
++
++/* DDR MMDC configuration -- 2Gbit SDRAM chips */
++#ifdef CONFIG_ZMP003_DDR_1GB
 +DATA 4, 0x021b0004, 0x00020036
 +DATA 4, 0x021b0008, 0x09444040
 +DATA 4, 0x021b000c, 0x555A7975
@@ -1213,6 +1284,33 @@ index 0000000..aa897e9
 +DATA 4, 0x021b0004, 0x00025576
 +DATA 4, 0x021b0404, 0x00011006
 +DATA 4, 0x021b001c, 0x00000000
++#endif
++
++/* DDR MMDC configuration -- 8Gbit SDRAM chips */
++#ifdef CONFIG_ZMP003_DDR_4GB
++DATA 4, 0x021b0004, 0x00020036
++DATA 4, 0x021b0008, 0x09444040
++DATA 4, 0x021b000c, 0x8A8F7955
++DATA 4, 0x021b0010, 0xFF328F64
++DATA 4, 0x021b0014, 0x01FF00DB
++DATA 4, 0x021b0018, 0x00001740
++DATA 4, 0x021b001c, 0x00008000
++DATA 4, 0x021b002c, 0x000026d2
++DATA 4, 0x021b0030, 0x008F1023
++DATA 4, 0x021b0040, 0x00000077  /* MDASP -- why need LS nibble = 7 ??? */
++DATA 4, 0x021b0000, 0x851A0000
++DATA 4, 0x021b001c, 0x04088032
++DATA 4, 0x021b001c, 0x00008033
++DATA 4, 0x021b001c, 0x00048031
++DATA 4, 0x021b001c, 0x09408030
++DATA 4, 0x021b001c, 0x04008040
++DATA 4, 0x021b0020, 0x00005800
++DATA 4, 0x021b0818, 0x00011117
++DATA 4, 0x021b4818, 0x00011117
++DATA 4, 0x021b0004, 0x00025576
++DATA 4, 0x021b0404, 0x00011006
++DATA 4, 0x021b001c, 0x00000000
++#endif
 +
 +/* set the default clock gate to save power */
 +DATA 4, 0x020c4068, 0x00C03F3F
@@ -1241,15 +1339,18 @@ index 0000000..aa897e9
 +DATA 4, 0x020c4060, 0x000000fb
 +#endif
 diff --git a/boards.cfg b/boards.cfg
-index 353003c..39f4483 100644
+index 353003c..5449ef4 100644
 --- a/boards.cfg
 +++ b/boards.cfg
-@@ -1309,3 +1309,6 @@ Orphan  powerpc     mpc8xx         -           -               genietv
+@@ -1309,3 +1309,9 @@ Orphan  powerpc     mpc8xx         -           -               genietv
  Orphan  powerpc     mpc8xx         -           -               mbx8xx              MBX                                  -                                                                                                                                 -
  Orphan  powerpc     mpc8xx         -           -               mbx8xx              MBX860T                              -                                                                                                                                 -
  Orphan  powerpc     mpc8xx         -           -               nx823               NX823                                -                                                                                                                                 -
 +# The following are under development.
-+Active  arm         armv7          mx6         freescale       mx6qzmp003          mx6qzmp003                           mx6qzmp003:IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,DEFAULT_FDT_FILE="imx6q-zmp003.dtb",DDR_MB=1024                 Chris Holgate <chris@zynaptic.com>
++Active  arm         armv7          mx6         freescale       mx6qzmp003          MX6QZMP003-1GB-HDMI                  mx6qzmp003:IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,ZMP003_DDR_1GB,DEFAULT_FDT_FILE="imx6q-zmp003-hdmi.dtb"           Paul Onions <paul_onions@siliconinfusion.com>
++Active  arm         armv7          mx6         freescale       mx6qzmp003          MX6QZMP003-4GB-HDMI                  mx6qzmp003:IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,ZMP003_DDR_4GB,DEFAULT_FDT_FILE="imx6q-zmp003-hdmi.dtb"           Paul Onions <paul_onions@siliconinfusion.com>
++Active  arm         armv7          mx6         freescale       mx6qzmp003          MX6QZMP003-1GB-LCD                   mx6qzmp003:IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,ZMP003_DDR_1GB,DEFAULT_FDT_FILE="imx6q-zmp003-lcd.dtb"       Paul Onions <paul_onions@siliconinfusion.com>
++Active  arm         armv7          mx6         freescale       mx6qzmp003          MX6QZMP003-4GB-LCD                   mx6qzmp003:IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,ZMP003_DDR_4GB,DEFAULT_FDT_FILE="imx6q-zmp003-lcd.dtb"       Paul Onions <paul_onions@siliconinfusion.com>
 +
 diff --git a/include/configs/mx6qzmp003.h b/include/configs/mx6qzmp003.h
 new file mode 100644

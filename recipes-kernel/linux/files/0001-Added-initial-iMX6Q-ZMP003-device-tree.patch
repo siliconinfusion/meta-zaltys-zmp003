@@ -1,9 +1,9 @@
-diff --git a/arch/arm/boot/dts/imx6q-zmp003.dts b/arch/arm/boot/dts/imx6q-zmp003.dts
+diff --git a/arch/arm/boot/dts/imx6q-zmp003-hdmi.dts b/arch/arm/boot/dts/imx6q-zmp003-hdmi.dts
 new file mode 100644
-index 0000000..67a9a63
+index 0000000..8442e2f
 --- /dev/null
-+++ b/arch/arm/boot/dts/imx6q-zmp003.dts
-@@ -0,0 +1,60 @@
++++ b/arch/arm/boot/dts/imx6q-zmp003-hdmi.dts
+@@ -0,0 +1,46 @@
 +/*
 + * Copyright 2015 Silicon Infusion Ltd.
 + *
@@ -31,7 +31,6 @@ index 0000000..67a9a63
 +};
 +
 +
-+/* HDMI */
 +&hdmi_core {
 +	status = "okay";
 +};
@@ -51,19 +50,47 @@ index 0000000..67a9a63
 +&mxcfb2 {
 +	status = "okay";
 +};
-+
-+
-+
-+/* LCD */
+diff --git a/arch/arm/boot/dts/imx6q-zmp003-lcd.dts b/arch/arm/boot/dts/imx6q-zmp003-lcd.dts
+new file mode 100644
+index 0000000..7075a1f
+--- /dev/null
++++ b/arch/arm/boot/dts/imx6q-zmp003-lcd.dts
+@@ -0,0 +1,35 @@
 +/*
-+&mxcfb3 {
-+        status = "okay";
++ * Copyright 2015 Silicon Infusion Ltd.
++ *
++ * The code contained herein is licensed under the GNU General Public
++ * License. You may obtain a copy of the GNU General Public License
++ * Version 2 or later at the following locations:
++ *
++ * http://www.opensource.org/licenses/gpl-license.html
++ * http://www.gnu.org/copyleft/gpl.html
++ */
++ 
++/*
++ * Provides the device tree for the standalone Zaltys ZMP003 processor board,
++ * which is treated as a basic single board PC/104 stack.
++ */
++
++/dts-v1/;
++
++#include "imx6q.dtsi"
++#include "imx6q-zmp003.dtsi"
++
++/ {
++	model = "Silicon Infusion ZMP003 i.MX6 Quad Processor Card";
++	compatible = "fsl,imx6q-zmp003", "fsl,imx6q";
 +};
++
 +
 +&lcd {
 +        status = "okay";
 +};
-+*/
++
++&mxcfb3 {
++        status = "okay";
++};
++
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dtsi b/arch/arm/boot/dts/imx6q-zmp003.dtsi
 new file mode 100644
 index 0000000..bf64fee
