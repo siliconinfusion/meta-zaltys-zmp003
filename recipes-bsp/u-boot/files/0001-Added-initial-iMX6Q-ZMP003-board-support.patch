@@ -16,10 +16,10 @@ index 0000000..de2890b
 +
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.c b/board/freescale/mx6qzmp003/mx6qzmp003.c
 new file mode 100644
-index 0000000..b96b6c0
+index 0000000..aa217a7
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.c
-@@ -0,0 +1,1120 @@
+@@ -0,0 +1,1137 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -195,11 +195,19 @@ index 0000000..b96b6c0
 +};
 +
 +static iomux_v3_cfg_t const onboard_fpga_pads[] = {
-+	MX6_PAD_EIM_A24__GPIO5_IO04   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* PROGB */
-+	MX6_PAD_SD3_DAT6__GPIO6_IO18  | MUX_PAD_CTRL(NO_PAD_CTRL),  /* CSN */
-+	MX6_PAD_EIM_D21__GPIO3_IO21   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* MODE1 */
-+        MX6_PAD_ENET_TXD1__GPIO1_IO29 | MUX_PAD_CTRL(NO_PAD_CTRL),  /* INIT */
-+        MX6_PAD_ENET_TXD0__GPIO1_IO30 | MUX_PAD_CTRL(NO_PAD_CTRL),  /* DONE */
++	MX6_PAD_EIM_A24__GPIO5_IO04   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_PROGB */
++	MX6_PAD_SD3_DAT6__GPIO6_IO18  | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_CSN */
++	MX6_PAD_EIM_D21__GPIO3_IO21   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_MODE1 */
++        MX6_PAD_ENET_TXD1__GPIO1_IO29 | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_INIT */
++        MX6_PAD_ENET_TXD0__GPIO1_IO30 | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_DONE */
++        MX6_PAD_EIM_A16__GPIO2_IO22   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_GPIO0 */
++        MX6_PAD_EIM_A17__GPIO2_IO21   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_GPIO1 */
++        MX6_PAD_EIM_A18__GPIO2_IO20   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_GPIO2 */
++        MX6_PAD_EIM_A19__GPIO2_IO19   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_GPIO3 */
++        MX6_PAD_EIM_A20__GPIO2_IO18   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_GPIO4 */
++        MX6_PAD_EIM_A21__GPIO2_IO17   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_GPIO5 */
++        MX6_PAD_EIM_A22__GPIO2_IO16   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_GPIO6 */
++        MX6_PAD_EIM_A23__GPIO6_IO06   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* C3FPGA_GPIO7 */
 +};
 +
 +static iomux_v3_cfg_t const onboard_gps_pads[] = {
@@ -236,11 +244,20 @@ index 0000000..b96b6c0
 +	imx_iomux_v3_setup_multiple_pads(pcie_pads, ARRAY_SIZE(pcie_pads));
 +}
 +
-+#define GPIO_C3FPGA_PROGB	IMX_GPIO_NR(5, 4)
-+#define GPIO_C3FPGA_CSN		IMX_GPIO_NR(6, 18)
-+#define GPIO_C3FPGA_MODE1	IMX_GPIO_NR(3, 21)
-+#define GPIO_C3FPGA_INIT	IMX_GPIO_NR(1, 29)
-+#define GPIO_C3FPGA_DONE	IMX_GPIO_NR(1, 30)
++#define GPIO_C3FPGA_PROGB IMX_GPIO_NR(5, 4)
++#define GPIO_C3FPGA_CSN   IMX_GPIO_NR(6, 18)
++#define GPIO_C3FPGA_MODE1 IMX_GPIO_NR(3, 21)
++#define GPIO_C3FPGA_INIT  IMX_GPIO_NR(1, 29)
++#define GPIO_C3FPGA_DONE  IMX_GPIO_NR(1, 30)
++
++#define GPIO_C3FPGA_GPIO0 IMX_GPIO_NR(2, 22)
++#define GPIO_C3FPGA_GPIO1 IMX_GPIO_NR(2, 21)
++#define GPIO_C3FPGA_GPIO2 IMX_GPIO_NR(2, 20)
++#define GPIO_C3FPGA_GPIO3 IMX_GPIO_NR(2, 19)
++#define GPIO_C3FPGA_GPIO4 IMX_GPIO_NR(2, 18)
++#define GPIO_C3FPGA_GPIO5 IMX_GPIO_NR(2, 17)
++#define GPIO_C3FPGA_GPIO6 IMX_GPIO_NR(2, 16)
++#define GPIO_C3FPGA_GPIO7 IMX_GPIO_NR(6, 6)
 +
 +/* Places FPGA in reset and selects SPI master mode flash programming */
 +static void setup_iomux_fpga(void)
