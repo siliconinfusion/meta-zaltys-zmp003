@@ -16,10 +16,10 @@ index 0000000..de2890b
 +
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.c b/board/freescale/mx6qzmp003/mx6qzmp003.c
 new file mode 100644
-index 0000000..aa217a7
+index 0000000..b3fbe3d
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.c
-@@ -0,0 +1,1137 @@
+@@ -0,0 +1,1110 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -402,33 +402,6 @@ index 0000000..aa217a7
 +			printf("setup pmic mode error!\n");
 +			return -1;
 +		}
-+		/*For camera streaks issue,swap VGEN5 and VGEN3 to power camera.
-+		*sperate VDDHIGH_IN and camera 2.8V power supply, after switch:
-+		*VGEN5 for VDDHIGH_IN and increase to 3V to align with datasheet
-+		*VGEN3 for camera 2.8V power supply
-+		*/
-+		/*increase VGEN3 from 2.5 to 2.8V*/
-+		if (i2c_read(0x8, 0x6e, 1, &value, 1)) {
-+			printf("Read VGEN3 error!\n");
-+			return -1;
-+		}
-+		value &= ~0xf;
-+		value |= 0xa;
-+		if (i2c_write(0x8, 0x6e, 1, &value, 1)) {
-+			printf("Set VGEN3 error!\n");
-+			return -1;
-+		}
-+		/*increase VGEN5 from 2.8 to 3V*/
-+		if (i2c_read(0x8, 0x70, 1, &value, 1)) {
-+			printf("Read VGEN5 error!\n");
-+			return -1;
-+		}
-+		value &= ~0xf;
-+		value |= 0xc;
-+		if (i2c_write(0x8, 0x70, 1, &value, 1)) {
-+			printf("Set VGEN5 error!\n");
-+			return -1;
-+		}
 +		/* set SW1AB staby volatage 0.975V*/
 +		if (i2c_read(0x8, 0x21, 1, &value, 1)) {
 +			printf("Read SW1ABSTBY error!\n");
@@ -477,11 +450,11 @@ index 0000000..aa217a7
 +		}
 +
 +                /* enable LICELL pin (battery charger output), set to 3.1v */
-+                value = 0x0D;
-+		if (i2c_write(0x8, 0x1A, 1, &value, 1)) {
-+			printf("Set COINCTL error!\n");
-+			return -1;
-+                }
++                /* value = 0x0D; */
++		/* if (i2c_write(0x8, 0x1A, 1, &value, 1)) { */
++		/* 	printf("Set COINCTL error!\n"); */
++		/* 	return -1; */
++                /* } */
 +	}
 +
 +	return 0;
