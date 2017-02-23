@@ -16,10 +16,10 @@ index 0000000..de2890b
 +
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.c b/board/freescale/mx6qzmp003/mx6qzmp003.c
 new file mode 100644
-index 0000000..b3fbe3d
+index 0000000..0386f64
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.c
-@@ -0,0 +1,1110 @@
+@@ -0,0 +1,1112 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -115,6 +115,8 @@ index 0000000..b3fbe3d
 +iomux_v3_cfg_t const uart_pads[] = {
 +	MX6_PAD_CSI0_DAT10__UART1_TX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
 +	MX6_PAD_CSI0_DAT11__UART1_RX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
++        MX6_PAD_EIM_D20__UART1_RTS_B      | MUX_PAD_CTRL(UART_PAD_CTRL),
++        MX6_PAD_EIM_D19__UART1_CTS_B      | MUX_PAD_CTRL(UART_PAD_CTRL),
 +};
 +#elif (CONFIG_MXC_UART_BASE == UART4_BASE)
 +iomux_v3_cfg_t const uart_pads[] = {
