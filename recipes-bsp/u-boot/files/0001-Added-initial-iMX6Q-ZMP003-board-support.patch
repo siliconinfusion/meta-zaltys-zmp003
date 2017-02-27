@@ -16,10 +16,10 @@ index 0000000..de2890b
 +
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.c b/board/freescale/mx6qzmp003/mx6qzmp003.c
 new file mode 100644
-index 0000000..0386f64
+index 0000000..56bce77
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.c
-@@ -0,0 +1,1112 @@
+@@ -0,0 +1,1115 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -239,6 +239,7 @@ index 0000000..0386f64
 +static iomux_v3_cfg_t const onboard_misc_pads[] = {
 +        /* Temporarily set them up as GPIO for board testing purposes */
 +        MX6_PAD_SD3_DAT7__GPIO6_IO17  | MUX_PAD_CTRL(NO_PAD_CTRL), /* SDWNB */
++        MX6_PAD_EIM_CS0__GPIO2_IO23   | MUX_PAD_CTRL(NO_PAD_CTRL), /* EIM_CS0 */
 +};
 +
 +static void setup_pcie(void)
@@ -332,11 +333,13 @@ index 0000000..0386f64
 +}
 +
 +#define GPIO_MISC_SDWNB IMX_GPIO_NR(6, 17)
++#define GPIO_MISC_EIM_CS0 IMX_GPIO_NR(2, 23)
 +
 +static void setup_iomux_misc(void)
 +{
 +        imx_iomux_v3_setup_multiple_pads(onboard_misc_pads, ARRAY_SIZE(onboard_misc_pads));	
 +	gpio_direction_input(GPIO_MISC_SDWNB);
++        gpio_direction_output(GPIO_MISC_EIM_CS0, 1);
 +}
 +
 +static void setup_standby_mode(void)
