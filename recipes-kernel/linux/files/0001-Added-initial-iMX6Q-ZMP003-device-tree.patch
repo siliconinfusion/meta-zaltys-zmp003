@@ -93,10 +93,10 @@ index 0000000..7075a1f
 +
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dtsi b/arch/arm/boot/dts/imx6q-zmp003.dtsi
 new file mode 100644
-index 0000000..bf64fee
+index 0000000..235a26e3
 --- /dev/null
 +++ b/arch/arm/boot/dts/imx6q-zmp003.dtsi
-@@ -0,0 +1,637 @@
+@@ -0,0 +1,638 @@
 +/*
 + * Copyright 2015 Silicon Infusion Ltd.
 + *
@@ -121,6 +121,7 @@ index 0000000..bf64fee
 +		mxcfb1 = &mxcfb2;
 +		mxcfb2 = &mxcfb3;
 +		mxcfb3 = &mxcfb4;
++		spi4   = &ecspi5;
 +	};
 +	
 +	memory {
