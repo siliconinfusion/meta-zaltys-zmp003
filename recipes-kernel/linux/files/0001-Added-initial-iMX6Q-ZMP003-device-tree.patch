@@ -93,10 +93,10 @@ index 0000000..7075a1f
 +
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dtsi b/arch/arm/boot/dts/imx6q-zmp003.dtsi
 new file mode 100644
-index 0000000..235a26e3
+index 0000000..89f3770
 --- /dev/null
 +++ b/arch/arm/boot/dts/imx6q-zmp003.dtsi
-@@ -0,0 +1,638 @@
+@@ -0,0 +1,645 @@
 +/*
 + * Copyright 2015 Silicon Infusion Ltd.
 + *
@@ -257,13 +257,19 @@ index 0000000..235a26e3
 +};
 +
 +&ecspi5 {
-+	fsl,spi-num-chipselects = <1>;
-+	cs-gpios = <&gpio1 14 0>;
++	fsl,spi-num-chipselects = <2>;
++	cs-gpios = <&gpio1 14 0>, <&gpio6 18 0>;
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_ecspi5>;
 +	status = "okay";
 +
 +	spidev3: spi@3 {
++		compatible = "spidev";
++		reg = <0>;
++		spi-max-frequency = <54000000>;
++	};
++
++	spidev4: spi@4 {
 +		compatible = "spidev";
 +		reg = <0>;
 +		spi-max-frequency = <54000000>;
@@ -449,6 +455,7 @@ index 0000000..235a26e3
 +				MX6QDL_PAD_SD1_CMD__ECSPI5_MOSI		0x100b1
 +				MX6QDL_PAD_SD1_CLK__ECSPI5_SCLK		0x100b1
 +				MX6QDL_PAD_SD2_DAT1__GPIO1_IO14		0x1b0b0
++				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18		0x1b0b0
 +			>;
 +		};
 +		
