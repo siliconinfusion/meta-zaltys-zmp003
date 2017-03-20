@@ -93,7 +93,7 @@ index 0000000..7075a1f
 +
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dtsi b/arch/arm/boot/dts/imx6q-zmp003.dtsi
 new file mode 100644
-index 0000000..89f3770
+index 0000000..30b83db
 --- /dev/null
 +++ b/arch/arm/boot/dts/imx6q-zmp003.dtsi
 @@ -0,0 +1,645 @@
@@ -271,7 +271,7 @@ index 0000000..89f3770
 +
 +	spidev4: spi@4 {
 +		compatible = "spidev";
-+		reg = <0>;
++		reg = <1>;
 +		spi-max-frequency = <54000000>;
 +	};
 +};
