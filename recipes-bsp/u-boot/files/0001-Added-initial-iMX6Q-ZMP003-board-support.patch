@@ -16,10 +16,10 @@ index 0000000..de2890b
 +
 diff --git a/board/freescale/mx6qzmp003/mx6qzmp003.c b/board/freescale/mx6qzmp003/mx6qzmp003.c
 new file mode 100644
-index 0000000..736c9c4
+index 0000000..e896dab
 --- /dev/null
 +++ b/board/freescale/mx6qzmp003/mx6qzmp003.c
-@@ -0,0 +1,1101 @@
+@@ -0,0 +1,1154 @@
 +/*
 + * Copyright (C) 2012-2014 Freescale Semiconductor, Inc.
 + *
@@ -236,6 +236,13 @@ index 0000000..736c9c4
 +        MX6_PAD_SD1_DAT3__GPIO1_IO21  | MUX_PAD_CTRL(NO_PAD_CTRL), /* EXT_GPIO7 */
 +};
 +
++static iomux_v3_cfg_t const onboard_gpio_pads[] = {
++        MX6_PAD_EIM_LBA__GPIO2_IO27   | MUX_PAD_CTRL(NO_PAD_CTRL), /* EIM_LBA */
++        MX6_PAD_EIM_RW__GPIO2_IO26    | MUX_PAD_CTRL(NO_PAD_CTRL), /* EIM_RW */
++        MX6_PAD_EIM_BCLK__GPIO6_IO31  | MUX_PAD_CTRL(NO_PAD_CTRL), /* EIM_BCLK */
++        MX6_PAD_EIM_WAIT__GPIO5_IO00  | MUX_PAD_CTRL(NO_PAD_CTRL), /* EIM_WAIT */
++};
++
 +static iomux_v3_cfg_t const onboard_misc_pads[] = {
 +        /* Temporarily set them up as GPIO for board testing purposes */
 +        MX6_PAD_SD3_DAT7__GPIO6_IO17  | MUX_PAD_CTRL(NO_PAD_CTRL), /* SDWNB */
@@ -271,6 +278,15 @@ index 0000000..736c9c4
 +	gpio_direction_output(GPIO_C3FPGA_MODE1, 0);
 +        gpio_direction_input(GPIO_C3FPGA_INIT);
 +        gpio_direction_input(GPIO_C3FPGA_DONE);
++
++        gpio_direction_output(GPIO_C3FPGA_GPIO0, 0);  /* to PROGB of 1st ZMP003-FPGA primary   -- inhibit programing */
++        gpio_direction_output(GPIO_C3FPGA_GPIO1, 0);  /* to PROGB of 1st ZMP003-FPGA secondary -- inhibit programing */
++        gpio_direction_output(GPIO_C3FPGA_GPIO2, 0);  /* to PROGB of 2nd ZMP003-FPGA primary   -- inhibit programing */
++        gpio_direction_output(GPIO_C3FPGA_GPIO3, 0);  /* to PROGB of 2nd ZMP003-FPGA secondary -- inhibit programing */
++        gpio_direction_output(GPIO_C3FPGA_GPIO4, 0);
++        gpio_direction_output(GPIO_C3FPGA_GPIO5, 0);
++        gpio_direction_output(GPIO_C3FPGA_GPIO6, 0);
++        gpio_direction_output(GPIO_C3FPGA_GPIO7, 0);
 +}
 +
 +/* Releases FPGA reset and initates SPI flash programming */
@@ -330,6 +346,20 @@ index 0000000..736c9c4
 +	gpio_direction_output(GPIO_EXT_GPIO5, 0);
 +	gpio_direction_output(GPIO_EXT_GPIO6, 0);
 +	gpio_direction_output(GPIO_EXT_GPIO7, 0);
++}
++
++#define GPIO_EIM_LBA  IMX_GPIO_NR(2,27)
++#define GPIO_EIM_RW   IMX_GPIO_NR(2,26)
++#define GPIO_EIM_BCLK IMX_GPIO_NR(6,31)
++#define GPIO_EIM_WAIT IMX_GPIO_NR(5,0)
++
++static void setup_iomux_gpio(void)
++{
++        imx_iomux_v3_setup_multiple_pads(onboard_gpio_pads, ARRAY_SIZE(onboard_gpio_pads));	
++	gpio_direction_output(GPIO_EIM_LBA,  0);
++	gpio_direction_output(GPIO_EIM_RW,   0);
++	gpio_direction_output(GPIO_EIM_BCLK, 0);
++	gpio_direction_output(GPIO_EIM_WAIT, 0);
 +}
 +
 +#define GPIO_MISC_SDWNB IMX_GPIO_NR(6, 17)
@@ -783,6 +813,27 @@ index 0000000..736c9c4
 +}
 +
 +static struct display_info_t const displays[] = {
++/* { */
++/* 	.bus	= -1, */
++/* 	.addr	= 0, */
++/* 	.pixfmt	= IPU_PIX_FMT_RGB24, */
++/* 	.detect	= NULL, */
++/* 	.enable	= do_enable_rgb, */
++/* 	.mode	= { */
++/* 		.name           = "LCD-480128", */
++/* 		.refresh        = 60, */
++/* 		.xres           = 480, */
++/* 		.yres           = 128, */
++/* 		.pixclock       = 7000, */
++/* 		.left_margin    = 40, */
++/* 		.right_margin   = 88, */
++/* 		.upper_margin   = 13, */
++/* 		.lower_margin   = 32, */
++/* 		.hsync_len      = 48, */
++/* 		.vsync_len      = 3, */
++/* 		.sync           = 0, */
++/* 		.vmode          = FB_VMODE_NONINTERLACED */
++/* } }, */
 +{
 +	.bus	= -1,
 +	.addr	= 0,
@@ -802,8 +853,8 @@ index 0000000..736c9c4
 +		.hsync_len      = 48,
 +		.vsync_len      = 3,
 +		.sync           = 0,
-+		.vmode          = FB_VMODE_NONINTERLACED 
-+} }, 
++		.vmode          = FB_VMODE_NONINTERLACED
++} },
 +{
 +	.bus	= -1,
 +	.addr	= 0,
@@ -959,8 +1010,10 @@ index 0000000..736c9c4
 +	gpio_set_value(GPIO_EXT_GPIO3, 1);  /* for boot debug */
 +        setup_iomux_clc();
 +	gpio_set_value(GPIO_EXT_GPIO4, 1);  /* for boot debug */
-+	setup_iomux_misc();
++        setup_iomux_gpio();
 +	gpio_set_value(GPIO_EXT_GPIO5, 1);  /* for boot debug */
++	setup_iomux_misc();
++	gpio_set_value(GPIO_EXT_GPIO6, 1);  /* for boot debug */
 +
 +        setup_standby_mode();
 +
