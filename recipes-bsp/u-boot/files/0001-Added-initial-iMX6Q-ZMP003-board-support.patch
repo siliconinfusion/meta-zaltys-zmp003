@@ -1373,10 +1373,10 @@ index 0000000..c503950
 +DATA 4, 0x020c4060, 0x000000fb
 +#endif
 diff --git a/boards.cfg b/boards.cfg
-index 353003c..5449ef4 100644
+index 353003c..ffb68a6 100644
 --- a/boards.cfg
 +++ b/boards.cfg
-@@ -1309,3 +1309,9 @@ Orphan  powerpc     mpc8xx         -           -               genietv
+@@ -1309,3 +1309,10 @@ Orphan  powerpc     mpc8xx         -           -               genietv
  Orphan  powerpc     mpc8xx         -           -               mbx8xx              MBX                                  -                                                                                                                                 -
  Orphan  powerpc     mpc8xx         -           -               mbx8xx              MBX860T                              -                                                                                                                                 -
  Orphan  powerpc     mpc8xx         -           -               nx823               NX823                                -                                                                                                                                 -
@@ -1385,6 +1385,7 @@ index 353003c..5449ef4 100644
 +Active  arm         armv7          mx6         freescale       mx6qzmp003          MX6QZMP003-4GB-HDMI                  mx6qzmp003:IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,ZMP003_DDR_4GB,DEFAULT_FDT_FILE="imx6q-zmp003-hdmi.dtb"           Paul Onions <paul_onions@siliconinfusion.com>
 +Active  arm         armv7          mx6         freescale       mx6qzmp003          MX6QZMP003-1GB-LCD                   mx6qzmp003:IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,ZMP003_DDR_1GB,DEFAULT_FDT_FILE="imx6q-zmp003-lcd.dtb"       Paul Onions <paul_onions@siliconinfusion.com>
 +Active  arm         armv7          mx6         freescale       mx6qzmp003          MX6QZMP003-4GB-LCD                   mx6qzmp003:IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,ZMP003_DDR_4GB,DEFAULT_FDT_FILE="imx6q-zmp003-lcd.dtb"       Paul Onions <paul_onions@siliconinfusion.com>
++Active  arm         armv7          mx6         freescale       mx6qzmp003          MX6QZMP003-4GB-DUAL                  mx6qzmp003:IMX_CONFIG=board/freescale/mx6qzmp003/mx6qzmp003.cfg,MX6Q,ZMP003_DDR_4GB,DEFAULT_FDT_FILE="imx6q-zmp003-dual.dtb"           Paul Onions <paul_onions@siliconinfusion.com>
 +
 diff --git a/include/configs/mx6qzmp003.h b/include/configs/mx6qzmp003.h
 new file mode 100644

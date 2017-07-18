@@ -1,6 +1,80 @@
+diff --git a/arch/arm/boot/dts/imx6q-zmp003-dual.dts b/arch/arm/boot/dts/imx6q-zmp003-dual.dts
+new file mode 100644
+index 0000000..e98f382
+--- /dev/null
++++ b/arch/arm/boot/dts/imx6q-zmp003-dual.dts
+@@ -0,0 +1,68 @@
++/*
++ * Copyright 2015 Silicon Infusion Ltd.
++ *
++ * The code contained herein is licensed under the GNU General Public
++ * License. You may obtain a copy of the GNU General Public License
++ * Version 2 or later at the following locations:
++ *
++ * http://www.opensource.org/licenses/gpl-license.html
++ * http://www.gnu.org/copyleft/gpl.html
++ */
++ 
++/*
++ * Provides the device tree for the standalone Zaltys ZMP003 processor board,
++ * which is treated as a basic single board PC/104 stack.
++ */
++
++/dts-v1/;
++
++#include "imx6q.dtsi"
++#include "imx6q-zmp003.dtsi"
++
++/ {
++	model = "Silicon Infusion ZMP003 i.MX6 Quad Processor Card";
++	compatible = "fsl,imx6q-zmp003", "fsl,imx6q";
++};
++
++
++&hdmi_core {
++	status = "okay";
++};
++
++&hdmi_video {
++	status = "okay";
++};
++
++&hdmi_audio {
++	status = "okay";
++};
++
++&hdmi_cec {
++	status = "okay";
++};
++
++&mxcfb1 {
++	status = "okay";
++};
++
++&lcd {
++        status = "okay";
++        display-timings {
++                timing {
++                        clock-frequency = <32100000>;
++                        hactive = <800>;
++                        vactive = <480>;
++                        hfront-porch = <88>;
++                        hback-porch = <40>;
++                        hsync-len = <48>;
++                        vback-porch = <13>;
++                        vfront-porch = <32>;
++                        vsync-len = <3>;
++                };
++         };
++};
++
++&mxcfb3 {
++        status = "okay";
++};
++
 diff --git a/arch/arm/boot/dts/imx6q-zmp003-hdmi.dts b/arch/arm/boot/dts/imx6q-zmp003-hdmi.dts
 new file mode 100644
-index 0000000..8442e2f
+index 0000000..0cca98a
 --- /dev/null
 +++ b/arch/arm/boot/dts/imx6q-zmp003-hdmi.dts
 @@ -0,0 +1,46 @@
@@ -47,7 +121,7 @@ index 0000000..8442e2f
 +	status = "okay";
 +};
 +
-+&mxcfb2 {
++&mxcfb1 {
 +	status = "okay";
 +};
 diff --git a/arch/arm/boot/dts/imx6q-zmp003-lcd.dts b/arch/arm/boot/dts/imx6q-zmp003-lcd.dts
@@ -93,10 +167,10 @@ index 0000000..7075a1f
 +
 diff --git a/arch/arm/boot/dts/imx6q-zmp003.dtsi b/arch/arm/boot/dts/imx6q-zmp003.dtsi
 new file mode 100644
-index 0000000..30b83db
+index 0000000..fee2884
 --- /dev/null
 +++ b/arch/arm/boot/dts/imx6q-zmp003.dtsi
-@@ -0,0 +1,645 @@
+@@ -0,0 +1,622 @@
 +/*
 + * Copyright 2015 Silicon Infusion Ltd.
 + *
@@ -117,11 +191,9 @@ index 0000000..30b83db
 +  
 +/ {
 +	aliases {
-+		mxcfb0 = &mxcfb1;
-+		mxcfb1 = &mxcfb2;
-+		mxcfb2 = &mxcfb3;
-+		mxcfb3 = &mxcfb4;
-+		spi4   = &ecspi5;
++                mxcfb0 = &mxcfb1;
++                mxcfb2 = &mxcfb3;
++		spi4 = &ecspi5;
 +	};
 +	
 +	memory {
@@ -163,18 +235,7 @@ index 0000000..30b83db
 +		hdmi-controller = <&hdmi_audio>;
 +	};
 +
-+	/* TODO: Remove the LVDS devices */
 +	mxcfb1: fb@0 {
-+		compatible = "fsl,mxc_sdc_fb";
-+		disp_dev = "ldb";
-+		interface_pix_fmt = "RGB666";
-+		default_bpp = <16>;
-+		int_clk = <0>;
-+		late_init = <0>;
-+		status = "disabled";
-+	};
-+
-+	mxcfb2: fb@1 {
 +		compatible = "fsl,mxc_sdc_fb";
 +		disp_dev = "hdmi";
 +		interface_pix_fmt = "RGB24";
@@ -196,16 +257,6 @@ index 0000000..30b83db
 +		status = "disabled";
 +	};
 +
-+	mxcfb4: fb@3 {
-+		compatible = "fsl,mxc_sdc_fb";
-+		disp_dev = "ldb";
-+		interface_pix_fmt = "RGB666";
-+		default_bpp = <16>;
-+		int_clk = <0>;
-+		late_init = <0>;
-+		status = "disabled";
-+	};
-+	
 +	lcd: lcd@0 {
 +		compatible = "fsl,lcd";
 +		ipu_id = <0>;
@@ -658,7 +709,7 @@ index 0000000..30b83db
 +};
 +
 +&hdmi_core {
-+	ipu_id = <0>;
++	ipu_id = <1>;
 +	disp_id = <0>;
 +	status = "disabled";
 +};
