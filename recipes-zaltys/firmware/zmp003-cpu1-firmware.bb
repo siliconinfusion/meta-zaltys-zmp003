@@ -25,10 +25,13 @@ do_install() {
     install -d ${D}${datadir}/zaltys/zmp003-cpu1-firmware
     install -d ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub
     install -d ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images
-    install -d ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/v2
-    install -d ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/v3
-    install spi-hub/images/v2/zmp003_cpu1_spi_hub.image ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/v2
-    install spi-hub/images/v3/zmp003_cpu1_spi_hub.image ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/v3
+    install -d ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/legacy
+    install -d ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/legacy/v2
+    install -d ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/legacy/v3
+    install -d ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/v1_3
+    install spi-hub/images/legacy/v2/zmp003_cpu1_spi_hub.image ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/legacy/v2
+    install spi-hub/images/legacy/v3/zmp003_cpu1_spi_hub.image ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/legacy/v3
+    install spi-hub/images/v1_3/zmp003_cpu1_spi_hub.image ${D}${datadir}/zaltys/zmp003-cpu1-firmware/spi-hub/images/v1_3
 
     install -d ${D}${sysconfdir}
     install -d ${D}${sysconfdir}/init.d
